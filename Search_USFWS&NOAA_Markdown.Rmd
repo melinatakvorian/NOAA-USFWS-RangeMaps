@@ -1,0 +1,258 @@
+---
+title: "Search & Report - USFWS & NOAA Matches with Smartsheet"
+author: Melina Takvorian, melina.takvorian@colostate.edu
+output: 
+  html_document:
+    theme:
+      bootswatch: cerulean
+date: "2025-10-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Description:
+
+This R Script uses the list of all T&E Species from installations going to be analyzed, and runs a search against the NOAA Endangered Species web map layer and the USFWS endangered species range layer. The R script produces CSV files with the list of T&E species of interest that NOAA and USFWS have range data for. These CSV files can be viewed here: N:\RStor\CEMML\ClimateChange\0_Natural Resources Teams\Wildlife\AF Viewer OY5 Melina and Gillian\T&E Range Map Data\SearchSpecies\_USFWS&NOAA\Output
+
+These species-match tests provide us an idea of where we can pull range data from to display in the dashboards. The summaries of the match-tests for NOAA and USFWS, as well as the manual search of the IUCN and eBird databases, can be viewed in the excel "RangeMapSearchTallies.xlsx" in the T&E Range Map data folder.
+
+## Setup
+
+```{r message = FALSE, warning = FALSE}
+##set working directory to pull the files----
+  setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/SearchSpecies_USFWS&NOAA")
+
+#load packages
+  library(tidyr)
+  library(dplyr)
+  library(stringr)
+  library(readxl)
+```
+
+## **USER REVIEW** - Import datasets 
+
+Please review the file folder for the data and confirm that the latest version of the smartsheet is titled what you see below. If that is not the case, please type the name of the smartsheet below
+
+```{r Smartsheet USER INPUT}
+  smartsheet_file_name <- "Smartsheet__Species Assessments - Viewer__20251003.xlsx"
+```
+
+Now that the smartsheet's file name is established, we can solidify our data sources.
+
+```{r}
+    noaa_raw <- read.csv("Rawdata/EndangeredSpeciesRange_AttrTable.csv")
+    usfws_raw1 <- read.csv("Rawdata/USFWS_rangemaps.csv")
+    #usfws2_raw <- read.csv("Rawdata/USFWS_rangemaps2.csv")
+    cemml_raw <- read_xlsx(paste0("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/AF Viewer OY5 Melina and Gillian/",smartsheet_file_name))
+```
+
+## Prepare Smartsheet data table
+
+```{r}
+  ##trim CEMML master list dataset----
+    # remove spaces in column names that we will keep because it is annoying to deal with in R
+    cemml_raw <- cemml_raw %>% rename(
+      "Species.Common.Name" = `Species Common Name`,
+      "Species.Latin.Name" = `Species Latin Name`,
+      "Species.ID" = `Species ID#`
+    )
+    
+  # remove the columns that are tallying each base up
+    cemml_raw <- cemml_raw %>% select(Species.Common.Name,Species.Latin.Name,Species.ID)
+```
+
+## Initialize check_alt_names function
+
+This function takes scientific names that have alternates, like "Phoebastria (=Diomedea) albatrus" and edits the existing cell to "Phoebastria albatrus" AND CREATES A NEW ROW for the alternate name "Diomedea albatrus". This way, there are two chances for the species to get matched, instead of zero, had the original formatting not been changed.
+
+```{r, echo = FALSE}
+check_alternate_names <- function(df, name_col) {
+    # Convert column name string to symbol for tidy evaluation
+    name_sym <- rlang::sym(name_col)
+    
+    df_expanded <- df %>%
+      rowwise() %>%
+      do({
+        name <- as.character(.[[name_col]])
+        # Check for pattern: Firstname (=Middlename) Lastname
+        if (str_detect(name, "\\(=.+?\\)")) {
+          # Extract parts
+          first <- str_extract(name, "^[^ ]+")
+          middle <- str_extract(name, "(?<=\\(=)[^\\)]+")
+          last <- str_extract(name, "[^ ]+$")
+          
+          # Create two versions of the name
+          name1 <- paste(first, last)
+          name2 <- paste(middle, last)
+          
+          # Create two new rows with updated name
+          row1 <- as.data.frame(., stringsAsFactors = FALSE)
+          row2 <- row1
+          
+          row1[[name_col]] <- name1
+          row2[[name_col]] <- name2
+          
+          bind_rows(row1, row2)
+        } else {
+          as.data.frame(., stringsAsFactors = FALSE)
+        }
+      }) %>%
+      ungroup()
+    
+    return(df_expanded)
+  }
+```
+
+## Match test #1 - Using full scientific names, as is
+
+```{r}
+#Matches the full name to the full name 
+#i.e. matches 'Genus species subspecies' to 'Genus species subspecies'
+    
+  ##CEMML & NOAA ----
+    
+  #run check_alternate_names function for NOAA
+  noaa_raw_expanded <- check_alternate_names(noaa_raw, "Scientific_Name")
+  
+  #run match
+  match_cemml_noaa <- match(cemml_raw$Species.Latin.Name, noaa_raw_expanded$Scientific_Name)
+
+  #create list of matched names - NOAA
+  realmatchnoaa <- list()
+  
+  for(i in 1:length(match_cemml_noaa)){
+    val <- match_cemml_noaa[i]
+    realmatchnoaa[i] <- noaa_raw_expanded$Scientific_Name[val]
+  }
+  
+  realmatchnoaa <- realmatchnoaa[!is.na(realmatchnoaa)]  
+
+
+  ##CEMML & USFWS ----
+    #run check_alternate_names function for uSFWS
+    usfws_raw_expanded <- check_alternate_names(usfws_raw, "SCINAME")  
+
+  #run match
+  match_cemml_usfws <- match(cemml_raw$Species.Latin.Name, usfws_raw_expanded$SCINAME)
+  
+  #create list of matched names - USFWS
+  realmatchUSFWS <- list()
+  
+  for(i in 1:length(match_cemml_usfws)){
+    val <- match_cemml_usfws[i]
+    realmatchUSFWS[i] <- usfws_raw_expanded$SCINAME[val]
+  }
+  
+  realmatchUSFWS <- realmatchUSFWS[!is.na(realmatchUSFWS)]
+
+```
+
+### Create a CSV 'report' with the USFWS and NOAA matches
+
+```{r}
+  ##CSV creation for LONG names ----
+    longname <- as.data.frame(matrix(nrow=length(realmatchnoaa),ncol=2))
+    longname <- longname %>% dplyr::rename(
+      "USFWS" = V1, 
+      "NOAA" = V2
+    )
+    
+    #fill in USFWS column
+    for(i in 1:length(realmatchUSFWS)){
+      val <- realmatchUSFWS[[i]]
+      longname[i,1] <- val
+    } 
+  
+    #fill in NOAA column
+    for(i in 1:length(realmatchnoaa)){
+      val <- realmatchnoaa[[i]]
+      longname[i,2] <- val
+    } 
+    
+    finaldata_longname <- longname
+  
+  write.csv(finaldata_longname, "Output/MATCHES_full_scinames.csv") #make clear this is the complete dataset
+```
+
+## Match test #2 - Only using 'Genus species' to ID matches
+
+```{r}
+#ONLY 'GENUS SPECIES' LEVEL MATCHES
+#i.e. matches 'Genus species' to 'Genus species'
+
+  #transform data to 'Genus species'
+  cemml_raw <- cemml_raw %>%
+    mutate(short_name = str_trim(str_extract(Species.Latin.Name, "^\\S+\\s+\\S+")))
+  
+  noaa_raw_expanded <- noaa_raw_expanded %>% 
+    mutate(short_name = str_trim(str_extract(Scientific_Name, "^\\S+\\s+\\S+")))
+
+##SHORTER CEMML & NOAA ----
+  #run match
+  match_cemmlSHORT_noaa <- match(cemml_raw$short_name, noaa_raw_expanded$short_name)
+
+  #create list of matched names - NOAA
+  realmatchSHORTNOAA <- list()
+  
+  for(i in 1:length(match_cemml_noaa)){
+    val <- match_cemmlSHORT_noaa[i]
+    realmatchSHORTNOAA[i] <- noaa_raw_expanded$short_name[val]
+  }
+  
+  realmatchSHORTNOAA <- realmatchSHORTNOAA[!is.na(realmatchSHORTNOAA)]  
+
+
+##SHORTER CEMML & USFWS ----
+  
+  #transform data to 'Genus species'
+  
+  #CEMML data is already done (see NOAA section above)
+  usfws_raw_expanded <- usfws_raw_expanded %>% 
+      mutate(short_name = str_trim(str_extract(SCINAME, "^\\S+\\s+\\S+")))
+  
+  #run match
+  match_cemmlSHORT_usfws <- match(cemml_raw$short_name, usfws_raw_expanded$short_name)
+
+  #create list of matched names - USFWS
+  realmatchSHORTusfws <- list()
+  
+  for(i in 1:length(match_cemmlSHORT_usfws)){
+    val <- match_cemmlSHORT_usfws[i]
+    realmatchSHORTusfws[i] <- usfws_raw_expanded$short_name[val]
+  }
+  
+  realmatchSHORTusfws <- realmatchSHORTusfws[!is.na(realmatchSHORTusfws)]  
+
+```
+
+### Create a CSV 'report' with the USFWS and NOAA matches
+
+```{r}
+  ##CSV creation for SHORT names----
+    shortname <- as.data.frame(matrix(nrow=length(realmatchSHORTNOAA),ncol=2))
+      shortname <- shortname %>% dplyr::rename(
+        "USFWS" = V1, 
+        "NOAA" = V2
+      )
+      
+      #fill in USFWS column
+      for(i in 1:length(realmatchSHORTusfws)){
+        val <- realmatchSHORTusfws[[i]]
+        shortname[i,1] <- val
+      } 
+      
+      #fill in NOAA column
+      for(i in 1:length(realmatchSHORTNOAA)){
+        val <- realmatchSHORTNOAA[[i]]
+        shortname[i,2] <- val
+      } 
+      
+      finaldata_shortname <- shortname #make clear this is the complete dataset
+      
+    write.csv(finaldata_shortname, "Output/MATCHES_short_scinames.csv")
+    write.csv(cemml_raw, "Output/LIST_ALL_shortened_scinames.csv")
+```
+
+That completes the creation of the two CSV reports. Please see the Output folder under "SearchSpecies_USFWS&NOAA" to view the results of these match tests.
