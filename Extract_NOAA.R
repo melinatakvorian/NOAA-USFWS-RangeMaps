@@ -192,9 +192,9 @@ for(i in 1:nrow(noaa_D)){
 #EXPORT ALL FILES IN LIST THAT HAVE NOT BEEN DONE ALREADY
 
 #store folder path
-shapefile_folder <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/AF Viewer OY5 Melina and Gillian/T&E Range Map Data/SHAPEFILES"
+shapefile_folder <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Team/Wildlife/_RangeMaps/Shapefiles"
 
-done_files <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/AF Viewer OY5 Melina and Gillian/T&E Range Map Data/SHAPEFILES/Temporary"
+done_files <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/Shapefiles/Temporary"
 
 #identify files that are already completed
 speciesdone <- list.files(path = done_files, pattern = "\\.shp$")
