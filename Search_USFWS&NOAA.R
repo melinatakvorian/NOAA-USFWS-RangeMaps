@@ -11,13 +11,13 @@
 
 #These species-match tests provide us an idea of where we can pull range data from to display in the dashboards.
 #The summaries of the match-tests for NOAA and USFWS, as well as the manual search of the IUCN and eBird databases,
-#can be viewed in the excel "RangeMapSearchTallies.xlsx" in the T&E Range Map data folder.
+#can be viewed in the excel "RangeMapSearchTallies.xlsx" in the _RangeMaps data folder.
 
 #NOTE TO USER: 
 #Please ensure that the latest version of the smartsheet list of species
 #is the same name as what is written in the script under "import datasets" for cemml_raw.
-#If it different, please type the correct name in the quotation marks, as shown below: 
-#read_xlsx("...AF Viewer OY5 Melina and Gillian/NEW EXCEL NAME").
+#If it is different, please type the correct name in the quotation marks, as shown below: 
+#read_xlsx("..._Excel Files for Viewer/NEW EXCEL NAME").
 
 #SETUP----
 ##set working directory to pull the files----
