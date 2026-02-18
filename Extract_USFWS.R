@@ -26,8 +26,8 @@ invisible(lapply(packages, library, character.only = TRUE))
 #Read in files ----
 usfws_1 <- st_read("USFWS_rawdata/usfws_complete_species_current_range_1.shp")
 usfws_2 <- st_read("USFWS_rawdata/usfws_complete_species_current_range_2.shp")
-matches_complete <- read_csv("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/SearchSpecies_USFWS&NOAA/Output/MATCHES_full_scinames.csv")
-cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/RangeMaps/SearchSpecies_USFWS&NOAA/Rawdata/Species Assessments - Viewer.xlsx")
+matches_complete <- read_csv("Output/MATCHES_full_scinames.csv")
+cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_Excel Files For Viewer/Species Assessments - Viewer.xlsx")
 
 #PULL INDIVIDUAL SPECIES Data ----
 ##usfws 1 ----
@@ -145,9 +145,9 @@ for(i in 1:nrow(MGL_D)){
 #EXPORT ALL FILES IN LIST THAT HAVE NOT BEEN DONE ALREADY
 
 #store folder path
-shapefile_folder <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/AF Viewer OY5 Melina and Gillian/T&E Range Map Data/SHAPEFILES"
+shapefile_folder <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Team/Wildlife/_RangeMaps/Shapefiles"
 
-done_files <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/AF Viewer OY5 Melina and Gillian/T&E Range Map Data/SHAPEFILES/Temporary"
+done_files <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/Shapefiles/Temporary"
 
 #identify files that are already completed
 speciesdone <- list.files(path = done_files, pattern = "\\.shp$")
