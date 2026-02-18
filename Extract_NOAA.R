@@ -7,7 +7,7 @@
 
 #Setup ----
 
-setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/AF Viewer OY5 Melina and Gillian/T&E Range Map Data/SHAPEFILES")
+setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/Shapefiles")
 
 ##install packages----
 # Package names
@@ -31,7 +31,7 @@ library(arcgisbinding)
 
 #Data import ----
 ##CEMML list of species ----
-matches_complete <- read_csv("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/SearchSpecies_USFWS&NOAA/Output/MATCHES_full_scinames.csv")
+matches_complete <- read_csv("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/NOAA-USFWS-RangeMaps/Output/MATCHES_full_scinames.csv")
 cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_Excel Files For Viewer/Species Assessments - Viewer.xlsx")
 
 ##Pulling NOAA data from ArcGIs Online ----

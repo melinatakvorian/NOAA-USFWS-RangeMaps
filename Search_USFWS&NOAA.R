@@ -7,7 +7,7 @@
 #and runs a search against the NOAA Endangered Species web map layer and the USFWS endangered species range layer.
 #The R script produces CSV files with the list of T&E species of interest that NOAA and USFWS have range data for.
 #These CSV files can be viewed here:
-#N:\RStor\CEMML\ClimateChange\0_Natural Resources Teams\Wildlife\AF Viewer OY5 Melina and Gillian\T&E Range Map Data\SearchSpecies_USFWS&NOAA\Output
+#N:\RStor\CEMML\ClimateChange\0_Natural Resources Teams\Wildlife\_RangeMaps\NOAA-USFWS-RangeMaps\Output
 
 #These species-match tests provide us an idea of where we can pull range data from to display in the dashboards.
 #The summaries of the match-tests for NOAA and USFWS, as well as the manual search of the IUCN and eBird databases,
@@ -21,7 +21,7 @@
 
 #SETUP----
 ##set working directory to pull the files----
-setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/SearchSpecies_USFWS&NOAA")
+setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/NOAA-USFWS-RangeMaps")
 
 ##install packages----
 # Package names
@@ -38,8 +38,10 @@ invisible(lapply(packages, library, character.only = TRUE))
 
 ##import datasets ----
 noaa_raw <- read.csv("Rawdata/EndangeredSpeciesRange_AttrTable.csv")
+  #this data comes from: https://www.arcgis.com/home/item.html?id=2c0a74713eb04ae5921fca27c854a331
 usfws_raw <- read.csv("Rawdata/USFWS_rangemaps.csv")
 usfws2_raw <- read.csv("Rawdata/USFWS_rangemaps2.csv")
+  #this dataset comes from: https://ecos.fws.gov/docs/species/shapefiles/usfws_complete_species_current_range.zip
 cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_Excel Files For Viewer/Species Assessments - Viewer.xlsx")
 
 ##trim CEMML master list dataset----

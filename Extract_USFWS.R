@@ -8,7 +8,7 @@
 
 
 #Setup ----
-setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/SearchSpecies_USFWS&NOAA")
+setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/NOAA-USFWS-RangeMaps")
 
 ##install packages----
 # Package names
@@ -24,8 +24,8 @@ if (any(installed_packages == FALSE)) {
 invisible(lapply(packages, library, character.only = TRUE))
 
 #Read in files ----
-usfws_1 <- st_read("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/AF Viewer OY5 Melina and Gillian/T&E Range Map Data/ExtractBMGR/USFWS_rawdata/usfws_complete_species_current_range_1.shp")
-usfws_2 <- st_read("C:/Users/melinata/Downloads/usfws_complete_species_current_range/usfws_complete_species_current_range_2.shp")
+usfws_1 <- st_read("USFWS_rawdata/usfws_complete_species_current_range_1.shp")
+usfws_2 <- st_read("USFWS_rawdata/usfws_complete_species_current_range_2.shp")
 matches_complete <- read_csv("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/SearchSpecies_USFWS&NOAA/Output/MATCHES_full_scinames.csv")
 cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/RangeMaps/SearchSpecies_USFWS&NOAA/Rawdata/Species Assessments - Viewer.xlsx")
 
