@@ -44,16 +44,16 @@ usfws2_raw <- read.csv("Rawdata/USFWS_rangemaps2.csv")
   #this dataset comes from: https://ecos.fws.gov/docs/species/shapefiles/usfws_complete_species_current_range.zip
 cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_Excel Files For Viewer/Species Assessments - Viewer.xlsx")
 
-##trim CEMML master list dataset----
-# remove spaces in column names that we will keep because it is annoying to deal with in R
-cemml_raw <- cemml_raw %>% rename(
-  "Species.Common.Name" = `Species Common Name`,
-  "Species.Latin.Name" = `Species Latin Name`,
-  "Species.ID" = `Species ID#`
-)
-
-# remove the columns that are tallying each base up
-cemml_raw <- cemml_raw %>% select(Species.Common.Name,Species.Latin.Name,Species.ID)
+  ##trim CEMML master list dataset----
+  # remove spaces in column names that we will keep because it is annoying to deal with in R
+  cemml_raw <- cemml_raw %>% rename(
+    "Species.Common.Name" = `Species Common Name`,
+    "Species.Latin.Name" = `Species Latin Name`,
+    "Species.ID" = `Species ID#`
+  )
+  
+  # remove the columns that are tallying each base up
+  cemml_raw <- cemml_raw %>% select(Species.Common.Name,Species.Latin.Name,Species.ID)
 
 #INITIALIZE check_alt_names FUNCTION ----
 #this function takes scientific names that have alternates, like "Phoebastria (=Diomedea) albatrus"
@@ -99,196 +99,227 @@ check_alternate_names <- function(df, name_col) {
 }
 
 #MATCH TEST #1----
-#Matches the full name to the full name 
-#i.e. matches 'Genus species subspecies' to 'Genus species subspecies'
+  #Matches the full name to the full name 
+  #i.e. matches 'Genus species subspecies' to 'Genus species subspecies'
+  
+  ##CEMML & NOAA ----
+  
+  #run check_alternate_names function for NOAA
+  noaa_raw_expanded <- check_alternate_names(noaa_raw, "Scientific_Name")
+  
+  #run match
+  match_cemml_noaa <- match(cemml_raw$Species.Latin.Name, noaa_raw_expanded$Scientific_Name)
+  
+  #create list of matched names - NOAA
+  realmatchnoaa <- list()
+  
+  for(i in 1:length(match_cemml_noaa)){
+    val <- match_cemml_noaa[i]
+    realmatchnoaa[i] <- noaa_raw_expanded$Scientific_Name[val]
+  }
+  
+  realmatchnoaa <- realmatchnoaa[!is.na(realmatchnoaa)]  
 
-##CEMML & NOAA ----
 
-#run check_alternate_names function for NOAA
-noaa_raw_expanded <- check_alternate_names(noaa_raw, "Scientific_Name")
+    ##CEMML & USFWS 1/2 ----
+    #run check_alternate_names function for uSFWS
+    usfws_raw_expanded <- check_alternate_names(usfws_raw, "SCINAME")  
+    
+    #run match
+    match_cemml_usfws <- match(cemml_raw$Species.Latin.Name, usfws_raw_expanded$SCINAME)
+    
+    #create list of matched names - USFWS
+    realmatchUSFWS <- list()
+    
+    for(i in 1:length(match_cemml_usfws)){
+      val <- match_cemml_usfws[i]
+      realmatchUSFWS[i] <- usfws_raw_expanded$SCINAME[val]
+    }
+    
+    realmatchUSFWS <- realmatchUSFWS[!is.na(realmatchUSFWS)]
 
-#run match
-match_cemml_noaa <- match(cemml_raw$Species.Latin.Name, noaa_raw_expanded$Scientific_Name)
+    ##populate table for LONG name matches ----
+    longname <- as.data.frame(matrix(nrow=nrow(cemml_raw),ncol=2))
+    longname <- longname %>% dplyr::rename(
+      "USFWS" = V1, 
+      "NOAA" = V2
+    )
+    
+    #fill in USFWS column
+    for(i in 1:length(realmatchUSFWS)){
+      val <- realmatchUSFWS[[i]]
+      longname[i,1] <- val
+    } 
+    
+    #fill in NOAA column
+    for(i in 1:length(realmatchnoaa)){
+      val <- realmatchnoaa[[i]]
+      longname[i,2] <- val
+    } 
 
-#create list of matched names - NOAA
-realmatchnoaa <- list()
+    ##CEMML & USFWS 2/2 ----
+    #run check_alternate_names function for uSFWS
+    usfws2_raw_expanded <- check_alternate_names(usfws2_raw, "SCINAME")  
+    
+    #run match
+    match_cemml_usfws2 <- match(cemml_raw$Species.Latin.Name, usfws2_raw_expanded$SCINAME)
+    
+    #create list of matched names - USFWS
+    realmatchUSFWS2 <- list()
+    
+    for(i in 1:length(match_cemml_usfws)){
+      val <- match_cemml_usfws[i]
+      realmatchUSFWS2[i] <- usfws2_raw_expanded$SCINAME[val]
+    }
+    
+    realmatchUSFWS2 <- realmatchUSFWS2[!is.na(realmatchUSFWS2)]
+    
+    #table creation
+    
+    #fill in USFWS column
+    rownum <- as.numeric(length(realmatchUSFWS))
+    
+    for(i in 1:length(realmatchUSFWS2)){
+      val <- realmatchUSFWS2[[i]]
+      rownum <- rownum + 1
+      longname[rownum,1] <- val
+    } 
 
-for(i in 1:length(match_cemml_noaa)){
-  val <- match_cemml_noaa[i]
-  realmatchnoaa[i] <- noaa_raw_expanded$Scientific_Name[val]
-}
-
-realmatchnoaa <- realmatchnoaa[!is.na(realmatchnoaa)]  
-
-
-##CEMML & USFWS 1/2 ----
-#run check_alternate_names function for uSFWS
-usfws_raw_expanded <- check_alternate_names(usfws_raw, "SCINAME")  
-
-#run match
-match_cemml_usfws <- match(cemml_raw$Species.Latin.Name, usfws_raw_expanded$SCINAME)
-
-#create list of matched names - USFWS
-realmatchUSFWS <- list()
-
-for(i in 1:length(match_cemml_usfws)){
-  val <- match_cemml_usfws[i]
-  realmatchUSFWS[i] <- usfws_raw_expanded$SCINAME[val]
-}
-
-realmatchUSFWS <- realmatchUSFWS[!is.na(realmatchUSFWS)]
-
-##populate table for LONG name matches ----
-longname <- as.data.frame(matrix(nrow=nrow(cemml_raw),ncol=2))
-longname <- longname %>% dplyr::rename(
-  "USFWS" = V1, 
-  "NOAA" = V2
-)
-
-#fill in USFWS column
-for(i in 1:length(realmatchUSFWS)){
-  val <- realmatchUSFWS[[i]]
-  longname[i,1] <- val
-} 
-
-#fill in NOAA column
-for(i in 1:length(realmatchnoaa)){
-  val <- realmatchnoaa[[i]]
-  longname[i,2] <- val
-} 
-
-##CEMML & USFWS 2/2 ----
-#run check_alternate_names function for uSFWS
-usfws2_raw_expanded <- check_alternate_names(usfws2_raw, "SCINAME")  
-
-#run match
-match_cemml_usfws2 <- match(cemml_raw$Species.Latin.Name, usfws2_raw_expanded$SCINAME)
-
-#create list of matched names - USFWS
-realmatchUSFWS2 <- list()
-
-for(i in 1:length(match_cemml_usfws)){
-  val <- match_cemml_usfws[i]
-  realmatchUSFWS2[i] <- usfws2_raw_expanded$SCINAME[val]
-}
-
-realmatchUSFWS2 <- realmatchUSFWS2[!is.na(realmatchUSFWS2)]
-
-#table creation
-
-#fill in USFWS column
-rownum <- as.numeric(length(realmatchUSFWS))
-
-for(i in 1:length(realmatchUSFWS2)){
-  val <- realmatchUSFWS2[[i]]
-  rownum <- rownum + 1
-  longname[rownum,1] <- val
-} 
-
-##CSV creation for LONG names ----
-finaldata_longname <- longname
-
-write.csv(finaldata_longname, "Output/MATCHES_full_scinames.csv") #make clear this is the complete dataset
-
+    ##CSV creation for LONG names ----
+    finaldata_longname <- longname
+    
+    write.csv(finaldata_longname, "Output/MATCHES_full_scinames.csv") #make clear this is the complete dataset
+    
 #MATCH TEST #2 ----
-#ONLY 'GENUS SPECIES' LEVEL MATCHES
-#i.e. matches 'Genus species' to 'Genus species'
-
-#transform data to 'Genus species'
-cemml_raw <- cemml_raw %>%
-  mutate(short_name = str_trim(str_extract(Species.Latin.Name, "^\\S+\\s+\\S+")))
-
-noaa_raw_expanded <- noaa_raw_expanded %>% 
-  mutate(short_name = str_trim(str_extract(Scientific_Name, "^\\S+\\s+\\S+")))
-
-##SHORTER CEMML & NOAA ----
-#run match
-match_cemmlSHORT_noaa <- match(cemml_raw$short_name, noaa_raw_expanded$short_name)
-
-#create list of matched names - NOAA
-realmatchSHORTNOAA <- list()
-
-for(i in 1:length(match_cemml_noaa)){
-  val <- match_cemmlSHORT_noaa[i]
-  realmatchSHORTNOAA[i] <- noaa_raw_expanded$short_name[val]
-}
-
-realmatchSHORTNOAA <- realmatchSHORTNOAA[!is.na(realmatchSHORTNOAA)]  
-
-
-##SHORTER CEMML & USFWS ----
-
-#transform data to 'Genus species'
-
-#CEMML data is already done (see NOAA section above)
-usfws_raw_expanded <- usfws_raw_expanded %>% 
-  mutate(short_name = str_trim(str_extract(SCINAME, "^\\S+\\s+\\S+")))
-
-#run match
-match_cemmlSHORT_usfws <- match(cemml_raw$short_name, usfws_raw_expanded$short_name)
-
-#create list of matched names - USFWS
-realmatchSHORTusfws <- list()
-
-for(i in 1:length(match_cemmlSHORT_usfws)){
-  val <- match_cemmlSHORT_usfws[i]
-  realmatchSHORTusfws[i] <- usfws_raw_expanded$short_name[val]
-}
-
-realmatchSHORTusfws <- realmatchSHORTusfws[!is.na(realmatchSHORTusfws)]  
+  #ONLY 'GENUS SPECIES' LEVEL MATCHES
+  #i.e. matches 'Genus species' to 'Genus species'
+      
+  #transform data to 'Genus species'
+  cemml_raw <- cemml_raw %>%
+    mutate(short_name = str_trim(str_extract(Species.Latin.Name, "^\\S+\\s+\\S+")))
+      
+  noaa_raw_expanded <- noaa_raw_expanded %>% 
+    mutate(short_name = str_trim(str_extract(Scientific_Name, "^\\S+\\s+\\S+")))
+  
+    ##SHORTER CEMML & NOAA ----
+    #run match
+    match_cemmlSHORT_noaa <- match(cemml_raw$short_name, noaa_raw_expanded$short_name)
+    
+    #create list of matched names - NOAA
+    realmatchSHORTNOAA <- list()
+    
+    for(i in 1:length(match_cemml_noaa)){
+      val <- match_cemmlSHORT_noaa[i]
+      realmatchSHORTNOAA[i] <- noaa_raw_expanded$short_name[val]
+    }
+    
+    realmatchSHORTNOAA <- realmatchSHORTNOAA[!is.na(realmatchSHORTNOAA)]  
 
 
-##populate table for SHORT name matches----
-shortname <- as.data.frame(matrix(nrow=nrow(Cemml_raw),ncol=2))
-shortname <- shortname %>% dplyr::rename(
-  "USFWS" = V1, 
-  "NOAA" = V2
-)
+    ##SHORTER CEMML & USFWS ----
+    
+    #transform data to 'Genus species'
+    
+    #CEMML data is already done (see NOAA section above)
+    usfws_raw_expanded <- usfws_raw_expanded %>% 
+      mutate(short_name = str_trim(str_extract(SCINAME, "^\\S+\\s+\\S+")))
+    
+    #run match
+    match_cemmlSHORT_usfws <- match(cemml_raw$short_name, usfws_raw_expanded$short_name)
+    
+    #create list of matched names - USFWS
+    realmatchSHORTusfws <- list()
+    
+    for(i in 1:length(match_cemmlSHORT_usfws)){
+      val <- match_cemmlSHORT_usfws[i]
+      realmatchSHORTusfws[i] <- usfws_raw_expanded$short_name[val]
+    }
+    
+    realmatchSHORTusfws <- realmatchSHORTusfws[!is.na(realmatchSHORTusfws)]  
+    
+    
+    ##populate table for SHORT name matches----
+    shortname <- as.data.frame(matrix(nrow=nrow(Cemml_raw),ncol=2))
+    shortname <- shortname %>% dplyr::rename(
+      "USFWS" = V1, 
+      "NOAA" = V2
+    )
+    
+    #fill in USFWS column
+    for(i in 1:length(realmatchSHORTusfws)){
+      val <- realmatchSHORTusfws[[i]]
+      shortname[i,1] <- val
+    } 
+    
+    #fill in NOAA column
+    for(i in 1:length(realmatchSHORTNOAA)){
+      val <- realmatchSHORTNOAA[[i]]
+      shortname[i,2] <- val
+    } 
 
-#fill in USFWS column
-for(i in 1:length(realmatchSHORTusfws)){
-  val <- realmatchSHORTusfws[[i]]
-  shortname[i,1] <- val
-} 
-
-#fill in NOAA column
-for(i in 1:length(realmatchSHORTNOAA)){
-  val <- realmatchSHORTNOAA[[i]]
-  shortname[i,2] <- val
-} 
-
-##SHORTER CEMML & USFWS 2/2 ----
-
-#transform data to 'Genus species'
-
-#CEMML data is already done (see NOAA section above)
-usfws2_raw_expanded <- usfws2_raw_expanded %>% 
-  mutate(short_name = str_trim(str_extract(SCINAME, "^\\S+\\s+\\S+")))
-
-#run match
-match_cemmlSHORT_usfws2 <- match(cemml_raw$short_name, usfws2_raw_expanded$short_name)
-
-#create list of matched names - USFWS
-realmatchSHORTusfws2 <- list()
-
-for(i in 1:length(match_cemmlSHORT_usfws2)){
-  val <- match_cemmlSHORT_usfws2[i]
-  realmatchSHORTusfws2[i] <- usfws2_raw_expanded$short_name[val]
-}
-
-realmatchSHORTusfws2 <- realmatchSHORTusfws2[!is.na(realmatchSHORTusfws2)] 
-
-#fill in USFWS column
-rownum <- as.numeric(length(realmatchSHORTusfws))
-
-for(i in 1:length(realmatchSHORTusfws2)){
-  val <- realmatchSHORTusfws2[[i]]
-  rownum <- rownum + 1
-  shortname[rownum,1] <- val
-} 
+    ##SHORTER CEMML & USFWS 2/2 ----
+    
+    #transform data to 'Genus species'
+    
+    #CEMML data is already done (see NOAA section above)
+    usfws2_raw_expanded <- usfws2_raw_expanded %>% 
+      mutate(short_name = str_trim(str_extract(SCINAME, "^\\S+\\s+\\S+")))
+    
+    #run match
+    match_cemmlSHORT_usfws2 <- match(cemml_raw$short_name, usfws2_raw_expanded$short_name)
+    
+    #create list of matched names - USFWS
+    realmatchSHORTusfws2 <- list()
+    
+    for(i in 1:length(match_cemmlSHORT_usfws2)){
+      val <- match_cemmlSHORT_usfws2[i]
+      realmatchSHORTusfws2[i] <- usfws2_raw_expanded$short_name[val]
+    }
+    
+    realmatchSHORTusfws2 <- realmatchSHORTusfws2[!is.na(realmatchSHORTusfws2)] 
+    
+    #fill in USFWS column
+    rownum <- as.numeric(length(realmatchSHORTusfws))
+    
+    for(i in 1:length(realmatchSHORTusfws2)){
+      val <- realmatchSHORTusfws2[[i]]
+      rownum <- rownum + 1
+      shortname[rownum,1] <- val
+    } 
 
 ## CSV creation for SHORT names ----
 finaldata_shortname <- shortname #make clear this is the complete dataset
 
 write.csv(finaldata_shortname, "Output/MATCHES_short_scinames.csv")
 write.csv(cemml_raw, "Output/LIST_ALL_shortened_scinames.csv")
+
+#SAVE LIST OF NOT MATCHED ----
+  #try to identify the species that did not get any shapefiles
+  #need to take the list of all matches: [USFWS matches] + [NOAA matches] = [combined match list]
+    search_list <- list()
+    search_list <- as.list(cemml_raw$Species.Latin.Name)
+
+    combined_match_list <- list()
+    combined_match_list <-  c(realmatchnoaa, realmatchUSFWS, realmatchUSFWS2)
+  
+  #then take the list of all the species and: [species list] - [combined match list] = [species without matches]
+    no_sources <- list()
+    
+      for(speciesWant in 1:length(search_list)){
+        speciesCheck <- search_list[[speciesWant]]
+        for(speciesHave in 1:length(combined_match_list)){
+          if(speciesCheck == combined_match_list[[speciesHave]]){
+            no_sources[length(no_sources)+1] <- combined_match_list[[speciesHave]]
+          }else next
+        }
+      }
+  
+    #now store the output in a CSV
+    list_location <- paste0(getwd(), "/Output/NOT_MATCHED_list.csv")
+    no_sources_df <- data.frame(species = c())
+    for(i in 1:length(no_sources)){
+      no_sources_df[i,1] <- no_sources[[i]]
+    }
+    
+    write.csv(no_sources_df, list_location)
+
