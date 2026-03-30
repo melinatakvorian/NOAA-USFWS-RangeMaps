@@ -7,7 +7,7 @@
 
 #Setup ----
 
-setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/Shapefiles")
+setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/NOAA-USFWS-RangeMaps")
 
 ##install packages----
 # Package names
@@ -31,7 +31,8 @@ library(arcgisbinding)
 
 #Data import ----
 ##CEMML list of species ----
-matches_complete <- read_csv("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/NOAA-USFWS-RangeMaps/Output/MATCHES_full_scinames.csv")
+matches_complete <- read.csv("Output/NOAA_matches.csv")
+matches_usfws <- read.csv("Output/USFWS_matches.csv")
 cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_Excel Files For Viewer/Species Assessments - Viewer.xlsx")
 
 ##Pulling NOAA data from ArcGIs Online ----
@@ -51,8 +52,8 @@ noaa_dataset_0 <- arc.open("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/
 
 #Matches ----
 #delete the values that are ONLY in NOAA
-usfws_list <- matches_complete$USFWS
-noaa_list <- matches_complete$NOAA
+usfws_list <- matches_usfws$Species.Latin.Name
+noaa_list <- matches_complete$Species.Latin.Name
 
 unique_matches <- noaa_list[!noaa_list %in% usfws_list]
 
@@ -145,6 +146,7 @@ for (species in species_list) {
   noaa_singles <- rbind(noaa_singles, merged_row)
 }
 
+#investigate invalid geometry ----
 invalid_geom <- species_rows[!st_is_valid(species_rows$geometry), ]
 print(invalid_geom)
 plot(invalid_geom$geometry)
@@ -161,7 +163,7 @@ tm_shape(World, bbox = st_bbox(invalid_geom)) +
 species_rows$geometry <- st_simplify(species_rows$geometry, dTolerance = 0.01)
 
 #delete the occurrences of species from species_list ----
-noaa_C <- noaa_B %>% 
+noaa_C <- noaa_A %>% 
   filter(!Scientific_Name %in% species_list)
 
 #add in final species files ----
@@ -182,7 +184,7 @@ for(i in 1:nrow(noaa_D)){
   speciesID <- which(cemml_raw$`Species Latin Name` == sci_name) #find speciesID from list
   speciesID <- as.numeric(speciesID) #convert the ID to a number
   
-  noaa_D$speciesID[i] <- speciesID #assign this ID to a new column
+  noaa_D$speciesID[i] <- cemml_raw$`Species ID#`[speciesID] #assign this ID to a new column
   
   print(paste(sci_name, "speciesID: ", speciesID, " | has been added"))
 }
@@ -213,7 +215,7 @@ for(i in 1:nrow(noaa_D)){
   species_pull <- noaa_D[i,]
   
   ##pull species common name ----
-  name <- species_pull$COMNAME
+  name <- species_pull$Common_Name
   
   if(name == "No common name"){
     name <- species_pull$Scientific_Name
@@ -226,15 +228,11 @@ for(i in 1:nrow(noaa_D)){
   if(name %in% speciesdone) next #SKIP THIS SPECIES BECAUSE IT IS ALREADY DONE and in Temporary folder
   
   #create name using name
-  shapefile_location <- paste0(shapefile_folder,"/", name, ".shp")
+  shapefile_location <- paste0(done_files,"/", name, ".shp")
   
   #export shapefile to file path
   st_write(species_pull, shapefile_location, append=FALSE)
   
 }
 
-#make csv for logging in the table for Adam
-export_csv <- noaa_D[ ,c(_,_,_)] #only keep common name, scientific name, speciesID
-shapefile_location <- paste0(shapefile_folder,"/", "noaa_pull.csv")
-write.csv(export_csv, shapefile_location)
 
