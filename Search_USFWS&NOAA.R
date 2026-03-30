@@ -21,7 +21,7 @@
 
 #SETUP----
 ##set working directory to pull the files----
-setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/NOAA-USFWS-RangeMaps")
+setwd("C:/Users/melinata/Documents/RangeMapsWork/NOAA-USFWS-RangeMaps")
 
 ##install packages----
 # Package names
@@ -54,6 +54,9 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   
   # remove the columns that are tallying each base up
   cemml_raw <- cemml_raw %>% select(Species.Common.Name,Species.Latin.Name,Species.ID)
+  
+  # remove NA rows
+    # cemml_raw <- cemml_raw[!is.na(cemml_raw$Species.Common.Name)]
 
 #INITIALIZE check_alt_names FUNCTION ----
 #this function takes scientific names that have alternates, like "Phoebastria (=Diomedea) albatrus"
@@ -239,7 +242,7 @@ check_alternate_names <- function(df, name_col) {
     
     
     ##populate table for SHORT name matches----
-    shortname <- as.data.frame(matrix(nrow=nrow(Cemml_raw),ncol=2))
+    shortname <- as.data.frame(matrix(nrow=nrow(cemml_raw),ncol=2))
     shortname <- shortname %>% dplyr::rename(
       "USFWS" = V1, 
       "NOAA" = V2
@@ -301,18 +304,12 @@ write.csv(cemml_raw, "Output/LIST_ALL_shortened_scinames.csv")
 
     combined_match_list <- list()
     combined_match_list <-  c(realmatchnoaa, realmatchUSFWS, realmatchUSFWS2)
+    combined_match_list <- unique(combined_match_list) # make sure there are no duplicates
   
-  #then take the list of all the species and: [species list] - [combined match list] = [species without matches]
-    no_sources <- list()
+    #compare dataframes to see which do not have range maps
+    no_sources <- search_list[!(combined_match_list %in% search_list)] #WORKS
+    no_sources <- combined_match_list[!(cemml_raw %in% combined_match_list)]
     
-      for(speciesWant in 1:length(search_list)){
-        speciesCheck <- search_list[[speciesWant]]
-        for(speciesHave in 1:length(combined_match_list)){
-          if(speciesCheck == combined_match_list[[speciesHave]]){
-            no_sources[length(no_sources)+1] <- combined_match_list[[speciesHave]]
-          }else next
-        }
-      }
   
     #now store the output in a CSV
     list_location <- paste0(getwd(), "/Output/NOT_MATCHED_list.csv")
