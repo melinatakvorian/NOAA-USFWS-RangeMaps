@@ -296,25 +296,35 @@ finaldata_shortname <- shortname #make clear this is the complete dataset
 write.csv(finaldata_shortname, "Output/MATCHES_short_scinames.csv")
 write.csv(cemml_raw, "Output/LIST_ALL_shortened_scinames.csv")
 
-#SAVE LIST OF NOT MATCHED ----
-  #try to identify the species that did not get any shapefiles
-  #need to take the list of all matches: [USFWS matches] + [NOAA matches] = [combined match list]
-    search_list <- list()
-    search_list <- as.list(cemml_raw$Species.Latin.Name)
-    search_list2 <- as.list(cemml_raw$short_name)
-
-    combined_match_list <- list()
-    combined_match_list <-  c(realmatchnoaa, realmatchUSFWS, realmatchUSFWS2)
-    combined_match_list <- unique(combined_match_list) # make sure there are no duplicates
-  
-    #compare dataframes to see which do not have range maps
-    no_sources <- search_list[!(combined_match_list %in% search_list)] #WORKS, but only compares names as we have them
     
-    #create dataframe for the no_sources
-    no_sources_df <-  cemml_raw %>% 
-      filter(Species.Latin.Name %in% no_sources)
-  
-    #now store the output in a CSV
-    list_location <- paste0(getwd(), "/Output/NOT_MATCHED_list.csv")
-    write.csv(no_sources_df, list_location)
-
+#CREATE SOURCE LIST FROM SHORT AND LONG LISTS----
+    ##USFWS LIST----
+    usfws_long <- finaldata_longname$USFWS
+      usfws_long <- usfws_long[!is.na(usfws_long)]
+    usfws_short <- finaldata_shortname$USFWS
+      usfws_short <- usfws_short[!is.na(usfws_short)]
+      
+    usfws_compiled <- append(usfws_short, usfws_long, after = length(usfws_short))
+    
+    usfws_compiled <- unique(usfws_compiled)
+    
+    usfws_final_df <- cemml_raw %>% 
+      filter(Species.Latin.Name %in% usfws_compiled) 
+    
+    ##NOAA LIST----
+    noaa_long <- finaldata_longname$NOAA
+    noaa_long <- noaa_long[!is.na(noaa_long)]
+    noaa_short <- finaldata_shortname$NOAA
+    noaa_short <- noaa_short[!is.na(noaa_short)]
+    
+    noaa_compiled <- append(noaa_short, noaa_long, after = length(noaa_short))
+    
+    noaa_compiled <- unique(noaa_compiled)
+    
+    noaa_final_df <- cemml_raw %>% 
+      filter(Species.Latin.Name %in% noaa_compiled) 
+    
+    ## CSV creation for DATASETS BASED ON SOURCES ----
+    write.csv(usfws_final_df, "Output/USFWS_matches.csv")
+    write.csv(noaa_final_df, "Output/NOAA_matches.csv")
+    
