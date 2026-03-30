@@ -101,7 +101,7 @@ check_alternate_names <- function(df, name_col) {
   return(df_expanded)
 }
 
-#MATCH TEST #1----
+#MATCH TEST #1 (longer names) ----
   #Matches the full name to the full name 
   #i.e. matches 'Genus species subspecies' to 'Genus species subspecies'
   
@@ -193,7 +193,7 @@ check_alternate_names <- function(df, name_col) {
     
     write.csv(finaldata_longname, "Output/MATCHES_full_scinames.csv") #make clear this is the complete dataset
     
-#MATCH TEST #2 ----
+#MATCH TEST #2 (shorter names) ----
   #ONLY 'GENUS SPECIES' LEVEL MATCHES
   #i.e. matches 'Genus species' to 'Genus species'
       
@@ -301,22 +301,20 @@ write.csv(cemml_raw, "Output/LIST_ALL_shortened_scinames.csv")
   #need to take the list of all matches: [USFWS matches] + [NOAA matches] = [combined match list]
     search_list <- list()
     search_list <- as.list(cemml_raw$Species.Latin.Name)
+    search_list2 <- as.list(cemml_raw$short_name)
 
     combined_match_list <- list()
     combined_match_list <-  c(realmatchnoaa, realmatchUSFWS, realmatchUSFWS2)
     combined_match_list <- unique(combined_match_list) # make sure there are no duplicates
   
     #compare dataframes to see which do not have range maps
-    no_sources <- search_list[!(combined_match_list %in% search_list)] #WORKS
-    no_sources <- combined_match_list[!(cemml_raw %in% combined_match_list)]
+    no_sources <- search_list[!(combined_match_list %in% search_list)] #WORKS, but only compares names as we have them
     
+    #create dataframe for the no_sources
+    no_sources_df <-  cemml_raw %>% 
+      filter(Species.Latin.Name %in% no_sources)
   
     #now store the output in a CSV
     list_location <- paste0(getwd(), "/Output/NOT_MATCHED_list.csv")
-    no_sources_df <- data.frame(species = c())
-    for(i in 1:length(no_sources)){
-      no_sources_df[i,1] <- no_sources[[i]]
-    }
-    
     write.csv(no_sources_df, list_location)
 
