@@ -245,3 +245,14 @@ for(i in 1:nrow(noaa_D)){
   st_write(species_pull, shapefile_location, append=FALSE)
   
 }
+
+  
+# CSV creation for DATASETS BASED ON SOURCES ----
+  noaa_extracted_matches <- noaa_D %>% 
+    select(Common_Name, Scientific_Name, speciesID) %>% 
+    st_drop_geometry()
+  
+  ##write to Output folder ----
+  filepath <- "C:/Users/melinata/Documents/RangeMapsWork/NOAA-USFWS-RangeMaps/"
+  write.csv(noaa_extracted_matches, paste0(filepath, "Output/extracted_NOAA_matches.csv"))
+  
