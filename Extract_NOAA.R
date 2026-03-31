@@ -7,144 +7,147 @@
 
 #Setup ----
 
-setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/NOAA-USFWS-RangeMaps")
-
-##install packages----
-# Package names
-packages <- c("readxl","tidyverse","tidyr","dplyr","stringr","sf","terra","tmap", "leaflet", "arcgis", "arcgisbinding")
-
-# Install packages not yet installed
-installed_packages <- packages %in% rownames(installed.packages())
-if (any(installed_packages == FALSE)) {
-  install.packages(packages[!installed_packages])
-}
-
-# Packages loading
-invisible(lapply(packages, library, character.only = TRUE))
-
-##installing and loading ArcGIS-R bridge (if not already on computer)----
-install.packages("arcgis", repos = c("https://r-arcgis.r-universe.dev", "https://cloud.r-project.org"))
-library(arcgis)
-
-install.packages("arcgisbinding", repos = "https://r.esri.com", type = "win.binary")
-library(arcgisbinding)
+  setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/NOAA-USFWS-RangeMaps")
+  
+  ##install packages----
+  # Package names
+  packages <- c("readxl","tidyverse","tidyr","dplyr","stringr","sf","terra","tmap", "leaflet", "arcgis", "arcgisbinding")
+  
+  # Install packages not yet installed
+  installed_packages <- packages %in% rownames(installed.packages())
+  if (any(installed_packages == FALSE)) {
+    install.packages(packages[!installed_packages])
+  }
+  
+  # Packages loading
+  invisible(lapply(packages, library, character.only = TRUE))
+  
+  ##installing and loading ArcGIS-R bridge (if not already on computer)----
+  install.packages("arcgis", repos = c("https://r-arcgis.r-universe.dev", "https://cloud.r-project.org"))
+  library(arcgis)
+  
+  install.packages("arcgisbinding", repos = "https://r.esri.com", type = "win.binary")
+  library(arcgisbinding)
 
 #Data import ----
-##CEMML list of species ----
-matches_complete <- read.csv("Output/NOAA_matches.csv")
-matches_usfws <- read.csv("Output/USFWS_matches.csv")
-cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_Excel Files For Viewer/Species Assessments - Viewer.xlsx")
+    ##CEMML list of species ----
+    matches_complete <- read.csv("Output/NOAA_matches.csv")
+    matches_usfws <- read.csv("Output/USFWS_matches.csv")
+    cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_Excel Files For Viewer/Species Assessments - Viewer.xlsx")
 
-##Pulling NOAA data from ArcGIs Online ----
-# (not being used) noaa_dataset1 <- arc_read("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Species_Ranges/FeatureServer/1")
-#does not contain geometry, 'endangered species range areas'
-
-noaa_dataset3 <- arc_read("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Species_Ranges/FeatureServer/3")
-# 'diced endangered species range areas'
-#IF THIS DOESNT WORK, RE-INSTALL THE ARCGIS PACKAGE
-
-# (not being used) noaa_dataset4 <- arc_read("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Species_Ranges/FeatureServer/4")
-# 'generalized endangered species range areas'
-
-noaa_dataset_0 <- arc.open("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Species_Ranges/FeatureServer")
-#should be a dataset, not whatever that is
-#requires a /ID at the end, which is either 1,3,4 but none of them are successfully converted to
+    ##Pulling NOAA data from ArcGIs Online ----
+    # (not being used) noaa_dataset1 <- arc_read("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Species_Ranges/FeatureServer/1")
+    #does not contain geometry, 'endangered species range areas'
+    
+    noaa_dataset3 <- arc_read("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Species_Ranges/FeatureServer/3")
+    # 'diced endangered species range areas'
+    #IF THIS DOESNT WORK, RE-INSTALL THE ARCGIS PACKAGE
+    
+    # (not being used) noaa_dataset4 <- arc_read("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Species_Ranges/FeatureServer/4")
+    # 'generalized endangered species range areas'
+    
+    noaa_dataset4 <- arc_read("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Species_Ranges/FeatureServer/4")
+    # 'generalized endangered species range areas'
+    
+    # does not work- can't remember what it was supposed to do: noaa_dataset_0 <- arc.open("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Species_Ranges/FeatureServer")
+    #should be a dataset, not whatever that is
+    #requires a /ID at the end, which is either 1,3,4 but none of them are successfully converted to
 
 #Matches ----
-#delete the values that are ONLY in NOAA
-usfws_list <- matches_usfws$Species.Latin.Name
-noaa_list <- matches_complete$Species.Latin.Name
-
-unique_matches <- noaa_list[!noaa_list %in% usfws_list]
-
-noaa_A <- noaa_dataset3[0,]
-
-num <- 0
-
-for(i in 1:nrow(noaa_dataset3)){
+  #delete the values that are ONLY in NOAA
+  usfws_list <- matches_usfws$Species.Latin.Name
+  noaa_list <- matches_complete$Species.Latin.Name
   
-  newdf <- noaa_dataset3[i,]
-  sci_name <- newdf$Scientific_Name
+  unique_matches <- noaa_list[!noaa_list %in% usfws_list]
   
-  if(!sci_name %in% unique_matches) next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
-  num <- num+1
+  noaa_A <- noaa_dataset4[0,] #change to 3
   
-  com_name <- newdf$Common_Name
-  com_name <- gsub(" ", "", tools::toTitleCase(com_name))
+  num <- 0
   
-  speciesID <- which(cemml_raw$`Species Latin Name` == sci_name)
-  speciesID <- as.numeric(speciesID)
-  
-  print(paste(com_name, "speciesID: ",speciesID, " | has been added"))
-  
-  noaa_A[num, ] <- noaa_dataset3[i,]
-}
+  for(i in 1:nrow(noaa_dataset4)){ #change to 3
+    
+    newdf <- noaa_dataset4[i,] #change to 3
+    sci_name <- newdf$Scientific_Name
+    
+    if(!sci_name %in% unique_matches) next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
+    num <- num+1
+    
+    com_name <- newdf$Common_Name
+    com_name <- gsub(" ", "", tools::toTitleCase(com_name))
+    
+    speciesID <- which(cemml_raw$`Species Latin Name` == sci_name)
+    speciesID <- as.numeric(speciesID)
+    
+    print(paste(com_name, "speciesID: ",speciesID, " | has been added"))
+    
+    noaa_A[num, ] <- noaa_dataset4[i,] #change to 3
+  }
 
 
 #Make seperate table of species with multiple polygons ----
-noaa_A_mult <- noaa_A  %>%
-  group_by(Common_Name) %>%
-  filter(n() > 1) %>%
-  ungroup() 
-
-noaa_A_mult <- st_sf(noaa_A_mult)
-
-noaa_A_mult <- noaa_A_mult %>% relocate(geometry, .before = Scientific_Name_url)
+  noaa_A_mult <- noaa_A  %>%
+    group_by(Common_Name) %>%
+    filter(n() > 1) %>%
+    ungroup() 
+  
+  noaa_A_mult <- st_sf(noaa_A_mult)
+  
+  noaa_A_mult <- noaa_A_mult %>% relocate(geometry, .before = Scientific_Name_url)
 
 
 #create dataframe with merged polygons for each species from above ----
 
-#initialize dataset
-noaa_singles <- noaa_A_mult[0,] #where the final, merged data will go into
-
-#Get unique species names
-species_list <- unique(noaa_A_mult$Scientific_Name)
-
-#merge
-for (species in species_list) {
+  #initialize dataset
+  noaa_singles <- noaa_A_mult[0,] #where the final, merged data will go into
   
-  #need to only join the ones that are not empty
-  if(st_is_empty(noaa_A_mult$geometry[species])) next
+  #Get unique species names
+  species_list <- unique(noaa_A_mult$Scientific_Name)
   
-  # Get all rows for this species
-  species_rows <- noaa_A_mult[noaa_A_mult$Scientific_Name == species, ]
+  #merge
+  for (species in species_list) {
+    
+    #need to only join the ones that are not empty
+    if(st_is_empty(noaa_A_mult$geometry[species])) next
+    
+    # Get all rows for this species
+    species_rows <- noaa_A_mult[noaa_A_mult$Scientific_Name == species, ]
+    
+    # Merge geometries
+    merged_geom <- st_union(species_rows)
+    
+    # Take attributes from first row
+    merged_row <- species_rows[1, ]
+    merged_row$geometry <- merged_geom
+    
+    # Append to final sf
+    noaa_singles <- rbind(noaa_singles, merged_row)
+  }
   
-  # Merge geometries
-  merged_geom <- st_union(species_rows)
-  
-  # Take attributes from first row
-  merged_row <- species_rows[1, ]
-  merged_row$geometry <- merged_geom
-  
-  # Append to final sf
-  noaa_singles <- rbind(noaa_singles, merged_row)
-}
-
-# Loop through each species in the list
-for (species in species_list) {
-  
-  # Filter rows for the current species
-  species_rows <- noaa_A_mult[noaa_A_mult$Scientific_Name == species, ]
-  
-  # Remove rows with empty geometries
-  species_rows <- species_rows[!st_is_empty(species_rows$geometry), ]
-  
-  # Check if there are any rows left after filtering
-  if (nrow(species_rows) == 0) next
-  
-  # Merge geometries for the species
-  merged_geom <- st_union(species_rows$geometry)
-  
-  #    Error in wk_handle.wk_wkb(wkb, s2_geography_writer(oriented = oriented,  : 
-  #      Loop 1 is not valid: Edge 9 is degenerate (duplicate vertex)
-  
-  # Take attributes from the first row
-  merged_row <- species_rows[1, ]
-  merged_row$geometry <- merged_geom
-  
-  # Append to final sf object
-  noaa_singles <- rbind(noaa_singles, merged_row)
-}
+  # Loop through each species in the list
+  for (species in species_list) {
+    
+    # Filter rows for the current species
+    species_rows <- noaa_A_mult[noaa_A_mult$Scientific_Name == species, ]
+    
+    # Remove rows with empty geometries
+    species_rows <- species_rows[!st_is_empty(species_rows$geometry), ]
+    
+    # Check if there are any rows left after filtering
+    if (nrow(species_rows) == 0) next
+    
+    # Merge geometries for the species
+    merged_geom <- st_union(species_rows$geometry)
+    
+    #    Error in wk_handle.wk_wkb(wkb, s2_geography_writer(oriented = oriented,  : 
+    #      Loop 1 is not valid: Edge 9 is degenerate (duplicate vertex)
+    
+    # Take attributes from the first row
+    merged_row <- species_rows[1, ]
+    merged_row$geometry <- merged_geom
+    
+    # Append to final sf object
+    noaa_singles <- rbind(noaa_singles, merged_row)
+  }
 
 #investigate invalid geometry ----
 invalid_geom <- species_rows[!st_is_valid(species_rows$geometry), ]
@@ -163,50 +166,58 @@ tm_shape(World, bbox = st_bbox(invalid_geom)) +
 species_rows$geometry <- st_simplify(species_rows$geometry, dTolerance = 0.01)
 
 #delete the occurrences of species from species_list ----
-noaa_C <- noaa_A %>% 
-  filter(!Scientific_Name %in% species_list)
+  noaa_C <- noaa_A %>% 
+    filter(!Scientific_Name %in% species_list) %>% 
+    relocate(geometry, .before = Scientific_Name_url)
+
+  
+  noaa_C <- noaa_C %>% 
+    relocate(geometry, .before = Scientific_Name)
+  
+  ##CHECK FOR GEOMETRY, IF THE POLYGONS ARE EMPTY, THEN DELETE FROM TABLE----
+    noaa_C <- subset(noaa_C, !(st_is_empty(geometry)))
 
 #add in final species files ----
-noaa_D <- rbind(noaa_C, noaa_singles)
-
-#set coordinate reference system to be the same as the original data`
-#transform to spatial dataset
-noaa_D <- st_sf(noaa_D)
-
-#add CRS`
-st_crs(noaa_D) <- st_crs(noaa_A)
-
-##add speciesID
-for(i in 1:nrow(noaa_D)){
+  noaa_D <- rbind(noaa_C, noaa_singles)
   
-  sci_name <- noaa_D$Scientific_Name[i] #get name for ID
+  #set coordinate reference system to be the same as the original data`
+  #transform to spatial dataset
+  noaa_D <- st_sf(noaa_D)
   
-  speciesID <- which(cemml_raw$`Species Latin Name` == sci_name) #find speciesID from list
-  speciesID <- as.numeric(speciesID) #convert the ID to a number
+  #add CRS`
+  st_crs(noaa_D) <- st_crs(noaa_A)
   
-  noaa_D$speciesID[i] <- cemml_raw$`Species ID#`[speciesID] #assign this ID to a new column
-  
-  print(paste(sci_name, "speciesID: ", speciesID, " | has been added"))
-}
+  ##add speciesID
+  for(i in 1:nrow(noaa_D)){
+    
+    sci_name <- noaa_D$Scientific_Name[i] #get name for ID
+    
+    speciesID <- which(cemml_raw$`Species Latin Name` == sci_name) #find speciesID from list
+    speciesID <- as.numeric(speciesID) #convert the ID to a number
+    
+    noaa_D$speciesID[i] <- cemml_raw$`Species ID#`[speciesID] #assign this ID to a new column
+    
+    print(paste(sci_name, "speciesID: ", speciesID, " | has been added"))
+  }
 
 #EXPORTING ----
 
-#EXPORT ALL FILES IN LIST THAT HAVE NOT BEEN DONE ALREADY
-
-#store folder path
-shapefile_folder <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Team/Wildlife/_RangeMaps/Shapefiles"
-
-done_files <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/Shapefiles/Temporary"
-
-#identify files that are already completed
-speciesdone <- list.files(path = done_files, pattern = "\\.shp$")
-
-#remove .shp ending to be able to run comparison later
-for(i in 1:length(speciesdone)){
-  strL <- str_length(speciesdone[i])
-  newL <- strL - 4
-  speciesdone[i] <- str_sub(speciesdone[i],1,newL)
-}
+  #EXPORT ALL FILES IN LIST THAT HAVE NOT BEEN DONE ALREADY
+  
+  #store folder path
+  shapefile_folder <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Team/Wildlife/_RangeMaps/Shapefiles"
+  
+  done_files <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/Shapefiles/Temporary"
+  
+  #identify files that are already completed
+  speciesdone <- list.files(path = done_files, pattern = "\\.shp$")
+  
+  #remove .shp ending to be able to run comparison later
+  for(i in 1:length(speciesdone)){
+    strL <- str_length(speciesdone[i])
+    newL <- strL - 4
+    speciesdone[i] <- str_sub(speciesdone[i],1,newL)
+  }
 
 
 for(i in 1:nrow(noaa_D)){
@@ -234,5 +245,3 @@ for(i in 1:nrow(noaa_D)){
   st_write(species_pull, shapefile_location, append=FALSE)
   
 }
-
-
