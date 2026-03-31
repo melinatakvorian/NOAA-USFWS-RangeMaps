@@ -325,6 +325,6 @@ write.csv(cemml_raw, "Output/LIST_ALL_shortened_scinames.csv")
       filter(Species.Latin.Name %in% noaa_compiled) 
     
     ## CSV creation for DATASETS BASED ON SOURCES ----
-    write.csv(usfws_final_df, "Output/USFWS_matches.csv")
-    write.csv(noaa_final_df, "Output/NOAA_matches.csv")
+    write.csv(usfws_final_df, "Output/initial_USFWS_matches.csv")
+    write.csv(noaa_final_df, "Output/initial_NOAA_matches.csv")
     

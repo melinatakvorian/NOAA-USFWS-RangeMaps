@@ -186,10 +186,16 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
     
   }
 
-#make csv for logging in the table for Adam
-export_csv <- MGL_D[ ,c(6,7,12)] #only keep common name, scientific name, speciesID
-shapefile_location <- paste0(shapefile_folder,"/", "usfws_pull.csv")
-write.csv(export_csv, shapefile_location)
+
+# CSV creation for DATASETS BASED ON SOURCES ----
+usfws_extracted_matches <- MGL_D %>% 
+  select(COMNAME, SCINAME, speciesID) %>% 
+  st_drop_geometry()
+
+##write to Output folder ----
+filepath <- "C:/Users/melinata/Documents/RangeMapsWork/NOAA-USFWS-RangeMaps/"
+write.csv(usfws_extracted_matches, paste0(filepath, "Output/extracted_usfws_matches.csv"))
+
 
 #example of plotting a shapefile ----
 
