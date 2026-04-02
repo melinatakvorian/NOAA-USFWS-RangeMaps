@@ -11,7 +11,7 @@
   
   ##install packages----
   # Package names
-  packages <- c("readxl","tidyverse","tidyr","dplyr","stringr","sf","terra","tmap", "leaflet", "arcgis", "arcgisbinding")
+  packages <- c("readxl","tidyverse","tidyr","dplyr","stringr","sf","terra","tmap", "leaflet", "arcgisbinding")
   
   # Install packages not yet installed
   installed_packages <- packages %in% rownames(installed.packages())
@@ -177,7 +177,7 @@ species_rows$geometry <- st_simplify(species_rows$geometry, dTolerance = 0.01)
   ##CHECK FOR GEOMETRY, IF THE POLYGONS ARE EMPTY, THEN DELETE FROM TABLE----
     noaa_C <- subset(noaa_C, !(st_is_empty(geometry)))
 
-#add in speciesID ----
+#add in speciesID and season field ----
   noaa_D <- rbind(noaa_C, noaa_singles)
   
   #set coordinate reference system to be the same as the original data`
@@ -203,7 +203,7 @@ species_rows$geometry <- st_simplify(species_rows$geometry, dTolerance = 0.01)
   ##add 'season' field
   for(i in 1:nrow(noaa_D)){
     
-    noaa_D$season[i] <- 'resident' #assign this ID to a new column
+    noaa_D$season[i] <- 'general distribution' #assign this ID to a new column
     
     print(paste(noaa_D$Scientific_Name, " season has been added"))
   }

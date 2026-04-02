@@ -117,6 +117,9 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   MGL_C <- MGL_B %>% 
     filter(!SCINAME %in% species_list)
   
+  ##CHECK FOR GEOMETRY, IF THE POLYGONS ARE EMPTY, THEN DELETE FROM TABLE----
+  MGL_C <- subset(MGL_C, !(sf::st_is_empty(geometry)))
+  
   #add in species ID ----
   MGL_D <- rbind(MGL_C, MGL_singles)
   
@@ -130,7 +133,7 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   ##add speciesID
   for(i in 1:nrow(MGL_D)){
     
-    sci_name <- MGL_D$Scientific_Name[i] #get name for ID
+    sci_name <- MGL_D$SCINAME[i] #get name for ID
     
     speciesID <- which(cemml_raw$`Species Latin Name` == sci_name) #find speciesID from list
     speciesID <- as.numeric(speciesID) #convert the ID to a number
@@ -143,9 +146,9 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   ##add 'season' field
   for(i in 1:nrow(MGL_D)){
     
-    MGL_D$season[i] <- 'resident' #assign this ID to a new column
+    MGL_D$season[i] <- 'general distribution' #assign this ID to a new column
     
-    print(paste(sci_name, " season has been added"))
+    print(paste(MGL_D$SCINAME[i], " season has been added"))
   }
 
 #EXPORTING ----
@@ -198,11 +201,11 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
 # CSV creation for DATASETS BASED ON SOURCES ----
 usfws_extracted_matches <- MGL_D %>% 
   select(COMNAME, SCINAME, speciesID) %>% 
-  st_drop_geometry()
+  st_drop_geometry() #remove spatial component to keep file size small
 
 ##write to Output folder ----
 filepath <- "C:/Users/melinata/Documents/RangeMapsWork/NOAA-USFWS-RangeMaps/"
-write.csv(usfws_extracted_matches, paste0(filepath, "Output/extracted_usfws_matches.csv"))
+write.csv(usfws_extracted_matches, paste0(filepath, "Output/extracted_USFWS_matches.csv"))
 
 
 #example of plotting a shapefile ----
