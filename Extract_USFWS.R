@@ -117,7 +117,10 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   MGL_C <- MGL_B %>% 
     filter(!SCINAME %in% species_list)
   
-  #add in final species files ----
+  ##CHECK FOR GEOMETRY, IF THE POLYGONS ARE EMPTY, THEN DELETE FROM TABLE----
+  MGL_C <- subset(MGL_C, !(sf::st_is_empty(geometry)))
+  
+  #add in species ID ----
   MGL_D <- rbind(MGL_C, MGL_singles)
   
   #set coordinate reference system to be the same as the original data`
@@ -135,10 +138,18 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
     speciesID <- which(cemml_raw$`Species Latin Name` == sci_name) #find speciesID from list
     speciesID <- as.numeric(speciesID) #convert the ID to a number
     
-    MGL_D$speciesID[i] <- cemml_raw$`Species ID#`[speciesID] #assign this ID to a new column
+    MGL_D$speciesID[i] <- speciesID #assign this ID to a new column
     
     print(paste(sci_name, "speciesID: ", speciesID, " | has been added"))
-  } #errors but not sure why, because the table looks good
+  }
+  
+  ##add 'season' field
+  for(i in 1:nrow(MGL_D)){
+    
+    MGL_D$season[i] <- 'general distribution' #assign this ID to a new column
+    
+    print(paste(MGL_D$SCINAME[i], " season has been added"))
+  }
 
 #EXPORTING ----
 
@@ -147,7 +158,7 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
 #store folder path
   shapefile_folder <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Team/Wildlife/_RangeMaps/Shapefiles"
 
-  done_files <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/Shapefiles/Temporary"
+  done_files <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/Shapefiles/Testing-R-Workflow"
 
 #identify files that are already completed
   speciesdone <- list.files(path = done_files, pattern = "\\.shp$")
@@ -190,11 +201,11 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
 # CSV creation for DATASETS BASED ON SOURCES ----
 usfws_extracted_matches <- MGL_D %>% 
   select(COMNAME, SCINAME, speciesID) %>% 
-  st_drop_geometry()
+  st_drop_geometry() #remove spatial component to keep file size small
 
 ##write to Output folder ----
 filepath <- "C:/Users/melinata/Documents/RangeMapsWork/NOAA-USFWS-RangeMaps/"
-write.csv(usfws_extracted_matches, paste0(filepath, "Output/extracted_usfws_matches.csv"))
+write.csv(usfws_extracted_matches, paste0(filepath, "Output/extracted_USFWS_matches.csv"))
 
 
 #example of plotting a shapefile ----
