@@ -118,19 +118,21 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
     filter(!SCINAME %in% species_list)
   
   ##CHECK FOR GEOMETRY, IF THE POLYGONS ARE EMPTY, THEN DELETE FROM TABLE----
-  MGL_C <- subset(MGL_C, !(sf::st_is_empty(geometry)))
+  # MGL_C <- subset(MGL_C, !(sf::st_is_empty(geometry))) #have not worked this out for this script yet
   
-  #add in species ID ----
   MGL_D <- rbind(MGL_C, MGL_singles)
   
   #set coordinate reference system to be the same as the original data`
   #transform to spatial dataset
   MGL_D <- st_sf(MGL_D)
+  
+  ##CHECK FOR GEOMETRY, IF THE POLYGONS ARE EMPTY, THEN DELETE FROM TABLE----
+  MGL_D <- subset(MGL_D, !(sf::st_is_empty(geometry)))
 
   #add CRS`
   st_crs(MGL_D) <- st_crs(usfws_1)
   
-  ##add speciesID
+  #add in species ID ----
   for(i in 1:nrow(MGL_D)){
     
     sci_name <- MGL_D$SCINAME[i] #get name for ID
@@ -143,10 +145,11 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
     print(paste(sci_name, "speciesID: ", speciesID, " | has been added"))
   }
   
-  ##add 'season' field
+  ##add 'season' and 'drawOrder' field
   for(i in 1:nrow(MGL_D)){
     
     MGL_D$season[i] <- 'general distribution' #assign this ID to a new column
+    MGL_D$drawOrder[i] <- 1
     
     print(paste(MGL_D$SCINAME[i], " season has been added"))
   }
@@ -187,6 +190,7 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
     name <- gsub("'", "", name)
     
     #CHECK TO SEE IF ALREADY IN FOLDER (if yes, do not write into folder) -> IF NOT, create unique name for file
+      #if you want to overwrite any files, you can remove them from the speciesdone list, or assign speciesdone to c() to make it empty
     if(name %in% speciesdone) next 
     
     #create name using name
