@@ -23,10 +23,10 @@
   invisible(lapply(packages, library, character.only = TRUE))
   
   ##installing and loading ArcGIS-R bridge (if not already on computer)----
-  install.packages("arcgis", repos = c("https://r-arcgis.r-universe.dev", "https://cloud.r-project.org"))
+  #install.packages("arcgis", repos = c("https://r-arcgis.r-universe.dev", "https://cloud.r-project.org"))
   library(arcgis)
   
-  install.packages("arcgisbinding", repos = "https://r.esri.com", type = "win.binary")
+  #install.packages("arcgisbinding", repos = "https://r.esri.com", type = "win.binary")
   library(arcgisbinding)
 
 #Data import ----
@@ -150,20 +150,20 @@
   }
 
 #investigate invalid geometry ----
-invalid_geom <- species_rows[!st_is_valid(species_rows$geometry), ]
-print(invalid_geom)
-plot(invalid_geom$geometry)
-
-
-tmap_mode("view")
-tm_shape(World, bbox = st_bbox(invalid_geom)) +
-  tm_polygons(fill = "gray90", col = "white") +  # background map
+  invalid_geom <- species_rows[!st_is_valid(species_rows$geometry), ]
+  print(invalid_geom)
+  plot(invalid_geom$geometry)
   
-  tm_shape(invalid_geom) +
-  tm_borders(col = "blue", lwd = 2) +
-  tm_fill(col = "blue", alpha = 0.3) 
-
-species_rows$geometry <- st_simplify(species_rows$geometry, dTolerance = 0.01)
+  
+  tmap_mode("view")
+  tm_shape(World, bbox = st_bbox(invalid_geom)) +
+    tm_polygons(fill = "gray90", col = "white") +  # background map
+    
+    tm_shape(invalid_geom) +
+    tm_borders(col = "blue", lwd = 2) +
+    tm_fill(col = "blue", alpha = 0.3) 
+  
+  species_rows$geometry <- st_simplify(species_rows$geometry, dTolerance = 0.01)
 
 #delete the occurrences of species from species_list ----
   noaa_C <- noaa_A %>% 
@@ -204,6 +204,7 @@ species_rows$geometry <- st_simplify(species_rows$geometry, dTolerance = 0.01)
   for(i in 1:nrow(noaa_D)){
     
     noaa_D$season[i] <- 'general distribution' #assign this ID to a new column
+    noaa_D$drawOrder[i] <- 1
     
     print(paste(noaa_D$Scientific_Name, " season has been added"))
   }
@@ -227,32 +228,33 @@ species_rows$geometry <- st_simplify(species_rows$geometry, dTolerance = 0.01)
     speciesdone[i] <- str_sub(speciesdone[i],1,newL)
   }
 
-
-for(i in 1:nrow(noaa_D)){
-  
-  #pull list item out so that it can be saved individually
-  species_pull <- noaa_D[i,]
-  
-  ##pull species common name ----
-  name <- species_pull$Common_Name
-  
-  if(name == "No common name"){
-    name <- species_pull$Scientific_Name
+#export
+  for(i in 1:nrow(noaa_D)){
+    
+    #pull list item out so that it can be saved individually
+    species_pull <- noaa_D[i,]
+    
+    ##pull species common name ----
+    name <- species_pull$Common_Name
+    
+    if(name == "No common name"){
+      name <- species_pull$Scientific_Name
+    }
+    
+    name <- gsub(" ", "", tools::toTitleCase(name))
+    name <- gsub("'", "", name)
+    
+    #CHECK TO SEE IF ALREADY COMPLETED -> IF NOT, create unique name for file
+      #if you want to overwrite any files, you can remove them from the speciesdone list, or assign speciesdone to c() to make it empty
+    if(name %in% speciesdone) next #SKIP THIS SPECIES BECAUSE IT IS ALREADY DONE and in Temporary folder
+    
+    #create name using name
+    shapefile_location <- paste0(done_files,"/", name, ".shp")
+    
+    #export shapefile to file path
+    st_write(species_pull, shapefile_location, append=FALSE)
+    
   }
-  
-  name <- gsub(" ", "", tools::toTitleCase(name))
-  name <- gsub("'", "", name)
-  
-  #CHECK TO SEE IF ALREADY COMPLETED -> IF NOT, create unique name for file
-  if(name %in% speciesdone) next #SKIP THIS SPECIES BECAUSE IT IS ALREADY DONE and in Temporary folder
-  
-  #create name using name
-  shapefile_location <- paste0(done_files,"/", name, ".shp")
-  
-  #export shapefile to file path
-  st_write(species_pull, shapefile_location, append=FALSE)
-  
-}
 
   
 # CSV creation for DATASETS BASED ON SOURCES ----
