@@ -42,7 +42,7 @@ noaa_raw <- read.csv("Rawdata/EndangeredSpeciesRange_AttrTable.csv")
 usfws_raw <- read.csv("Rawdata/USFWS_rangemaps.csv")
 usfws2_raw <- read.csv("Rawdata/USFWS_rangemaps2.csv")
   #this dataset comes from: https://ecos.fws.gov/docs/species/shapefiles/usfws_complete_species_current_range.zip
-cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_Excel Files For Viewer/Species Assessments - Viewer.xlsx")
+cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/Species Assessments - Viewer.xlsx")
 
   ##trim CEMML master list dataset----
   # remove spaces in column names that we will keep because it is annoying to deal with in R

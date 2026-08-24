@@ -24,10 +24,10 @@ if (any(installed_packages == FALSE)) {
 invisible(lapply(packages, library, character.only = TRUE))
 
 #Read in files ----
-usfws_1 <- st_read("USFWS_rawdata/usfws_complete_species_current_range_1.shp")
-usfws_2 <- st_read("USFWS_rawdata/usfws_complete_species_current_range_2.shp")
-matches_complete <- read_csv("Output/USFWS_matches.csv")
-cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_Excel Files For Viewer/Species Assessments - Viewer.xlsx")
+usfws_1 <- st_read("Rawdata/usfws_complete_species_current_range_1.shp")
+usfws_2 <- st_read("Rawdata/usfws_complete_species_current_range_2.shp")
+matches_complete <- read_csv("C:/Users/melinata/Documents/NOAA-USFWS-RangeMaps/Output/initial_USFWS_matches.csv")
+cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/Species Assessments - Viewer.xlsx")
 
 #PULL INDIVIDUAL SPECIES Data ----
 ##usfws 1 ----
@@ -159,9 +159,9 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
 #EXPORT ALL FILES IN LIST THAT HAVE NOT BEEN DONE ALREADY
 
 #store folder path
-  shapefile_folder <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Team/Wildlife/_RangeMaps/Shapefiles"
+  shapefile_folder <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Team/Wildlife/_TEVAs/_RangeMaps/Shapefiles"
 
-  done_files <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/Shapefiles/Testing-R-Workflow"
+  done_files <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/_RangeMaps/Shapefiles/Temporary"
 
 #identify files that are already completed
   speciesdone <- list.files(path = done_files, pattern = "\\.shp$")
@@ -208,7 +208,7 @@ usfws_extracted_matches <- MGL_D %>%
   st_drop_geometry() #remove spatial component to keep file size small
 
 ##write to Output folder ----
-filepath <- "C:/Users/melinata/Documents/RangeMapsWork/NOAA-USFWS-RangeMaps/"
+filepath <- "C:/Users/melinata/Documents/NOAA-USFWS-RangeMaps/"
 write.csv(usfws_extracted_matches, paste0(filepath, "Output/extracted_USFWS_matches.csv"))
 
 
