@@ -12,7 +12,7 @@ setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMap
 
 ##install packages----
 # Package names
-packages <- c("readxl","tidyverse","tidyr","dplyr","stringr","sf","terra","tmap", "leaflet")
+packages <- c("readxl","tidyverse","tidyr","dplyr","stringr","sf","terra","tmap","leaflet")
 
 # Install packages not yet installed
 installed_packages <- packages %in% rownames(installed.packages())
