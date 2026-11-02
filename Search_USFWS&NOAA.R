@@ -190,6 +190,8 @@ check_alternate_names <- function(df, name_col) {
 
     ##CSV creation for LONG names ----
     finaldata_longname <- longname
+      #remove NAs from NOAA, which should be the column with the most data (so you aren't cutting off USFWS)
+      finaldata_longname <- drop_na(finaldata_longname, NOAA)
     
     write.csv(finaldata_longname, "Output/MATCHES_full_scinames.csv") #make clear this is the complete dataset
     

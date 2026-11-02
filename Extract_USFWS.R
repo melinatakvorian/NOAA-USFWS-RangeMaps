@@ -162,8 +162,19 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   shapefile_folder <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Team/Wildlife/_TEVAs/_RangeMaps/Shapefiles"
 
   done_files <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/_RangeMaps/Shapefiles/Temporary"
+  #done_files <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/_RangeMaps/T&E Range Map Data.xlsx")
 
 #identify files that are already completed
+  # done_files <- done_files %>% rename(
+  #   "Species.Common.Name" = `Species Common Name`,
+  #   "Species.Latin.Name" = `Species Latin Name`,
+  #   "Species.ID" = `Species ID`
+  # )
+  
+  # speciesdone <- done_files$Species.Common.Name
+  # speciesdone <- gsub(" ", "", tools::toTitleCase(speciesdone))
+  # speciesdone <- gsub("'", "", speciesdone)
+  
   speciesdone <- list.files(path = done_files, pattern = "\\.shp$")
 
 #remove .shp ending to be able to run comparison later
