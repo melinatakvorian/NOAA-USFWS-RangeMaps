@@ -24,13 +24,36 @@ if (any(installed_packages == FALSE)) {
 invisible(lapply(packages, library, character.only = TRUE))
 
 #Read in files ----
-usfws_1 <- st_read("Rawdata/usfws_complete_species_current_range_1.shp")
-usfws_2 <- st_read("Rawdata/usfws_complete_species_current_range_2.shp")
+usfws_1 <- sf::st_read("Rawdata/usfws_complete_species_current_range_1.shp")
+usfws_2 <- sf::st_read("Rawdata/usfws_complete_species_current_range_2.shp")
 matches_complete <- read_csv("C:/Users/melinata/Documents/NOAA-USFWS-RangeMaps/Output/initial_USFWS_matches.csv")
 cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/Species Assessments - Viewer.xlsx")
 
+
 #PULL INDIVIDUAL SPECIES Data ----
+## identify species we don't already have maps for ----
+  completed_range_maps <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/_RangeMaps/T&E Range Map Data.xlsx")
+  completed_range_maps <- completed_range_maps %>% select(c('Species Common Name', 'Species Latin Name', 'Species ID'))
+
+  #run match
+    match_completed <- match(completed_range_maps$`Species Latin Name`, matches_complete$Species.Latin.Name)
+  
+  #create list of matched names based on full scientific name
+    #THIS LOGIC MAY NEED IMPROVEMENT
+    needed_matches <- character(length(match_completed))
+    
+    for(i in 1:length(match_completed)){
+      val <- match_completed[i]
+      needed_matches[i] <- matches_complete$Species.Latin.Name[val]
+    }
+    
+    needed_matches <- needed_matches[!is.na(needed_matches)]
+  
+  #select only the NEEDED rows from the matches_complete dataset
+    needed_range_maps <- matches_complete %>% filter(!matches_complete$Species.Latin.Name %in% needed_matches)
+  
 ##usfws 1 ----
+  #create a data frame to store the shapefiles we need
   MGL1_A <- matrix(nrow = 1, ncol = 11)
   colnames(MGL1_A) <-  colnames(usfws_1)
   MGL1_A <- as.data.frame(MGL1_A)
@@ -41,13 +64,13 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
     newdf <- usfws_1[i,]
     sci_name <- newdf$SCINAME
     
-    if((!sci_name %in% matches_complete$Species.Latin.Name) && (!sci_name %in% matches_complete$short_name)) next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
+    if((!sci_name %in% needed_range_maps$Species.Latin.Name) && (!sci_name %in% needed_range_maps$short_name)) next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
     num <- num+1
     
     com_name <- newdf$COMNAME
     com_name <- gsub(" ", "", tools::toTitleCase(com_name))
     
-    speciesID <- which(cemml_raw$`Species Latin Name` == sci_name)
+    speciesID <- which(needed_range_maps$Species.Latin.Name == sci_name)
     speciesID <- as.numeric(speciesID)
     
     print(paste(com_name, "speciesID: ",speciesID, " | has been added"))
@@ -56,7 +79,7 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   }
 
 ##usfws 2 ----
-  MGL2_A <- matrix(nrow = 1, ncol = 5)
+  MGL2_A <- matrix(nrow = 1, ncol = 11)
   colnames(MGL2_A) <-  colnames(usfws_2)
   MGL2_A <- as.data.frame(MGL2_A)
   
@@ -66,14 +89,14 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
     newdf <- usfws_2[i,]
     sci_name <- newdf$SCINAME
     
-    if((!sci_name %in% matches_complete$Species.Latin.Name) && (!sci_name %in% matches_complete$short_name)) next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
+    if((!sci_name %in% needed_range_maps$Species.Latin.Name) && (!sci_name %in% needed_range_maps$short_name)) next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
     num <- num+1
     
     com_name <- newdf$COMNAME
     com_name <- gsub(" ", "", tools::toTitleCase(com_name))
     
-    speciesID <- which(cemml_raw$`Species Latin Name` == sci_name)
-    speciesID <- as.numeric(speciesID)
+    speciesID <- which(needed_range_maps$Species.Latin.Name == sci_name)
+    speciesID <- needed_range_maps$Species.ID[speciesID]
     
     print(paste(com_name, "speciesID: ",speciesID, " | has been added"))
     
@@ -81,6 +104,7 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   }
   
   MGL_B <- bind_rows(MGL1_A, MGL2_A)
+  MGL_B <- drop_na(MGL_B)
 
 #MAKE GROUP OF SEPERATES ----
   MGL_B_mult <- MGL_B  %>%
@@ -118,13 +142,13 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
     filter(!SCINAME %in% species_list)
   
   ##CHECK FOR GEOMETRY, IF THE POLYGONS ARE EMPTY, THEN DELETE FROM TABLE----
-  # MGL_C <- subset(MGL_C, !(sf::st_is_empty(geometry))) #have not worked this out for this script yet
+    #MGL_C <- subset(MGL_C, !(sf::st_is_empty(geometry))) #have not worked this out for this script yet
   
   MGL_D <- rbind(MGL_C, MGL_singles)
   
   #set coordinate reference system to be the same as the original data`
   #transform to spatial dataset
-  MGL_D <- st_sf(MGL_D)
+  MGL_D <- sf::st_sf(MGL_D)
   
   ##CHECK FOR GEOMETRY, IF THE POLYGONS ARE EMPTY, THEN DELETE FROM TABLE----
   MGL_D <- subset(MGL_D, !(sf::st_is_empty(geometry)))
@@ -137,8 +161,8 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
     
     sci_name <- MGL_D$SCINAME[i] #get name for ID
     
-    speciesID <- which(cemml_raw$`Species Latin Name` == sci_name) #find speciesID from list
-    speciesID <- as.numeric(speciesID) #convert the ID to a number
+    speciesID <- which(needed_range_maps$Species.Latin.Name == sci_name)
+    speciesID <- needed_range_maps$Species.ID[speciesID]
     
     MGL_D$speciesID[i] <- speciesID #assign this ID to a new column
     
@@ -162,18 +186,6 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   shapefile_folder <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Team/Wildlife/_TEVAs/_RangeMaps/Shapefiles"
 
   done_files <- "N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/_RangeMaps/Shapefiles/Temporary"
-  #done_files <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/_RangeMaps/T&E Range Map Data.xlsx")
-
-#identify files that are already completed
-  # done_files <- done_files %>% rename(
-  #   "Species.Common.Name" = `Species Common Name`,
-  #   "Species.Latin.Name" = `Species Latin Name`,
-  #   "Species.ID" = `Species ID`
-  # )
-  
-  # speciesdone <- done_files$Species.Common.Name
-  # speciesdone <- gsub(" ", "", tools::toTitleCase(speciesdone))
-  # speciesdone <- gsub("'", "", speciesdone)
   
   speciesdone <- list.files(path = done_files, pattern = "\\.shp$")
 
