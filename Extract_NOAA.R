@@ -263,6 +263,6 @@
     st_drop_geometry()
   
   ##write to Output folder ----
-  filepath <- "C:/Users/melinata/Documents/RangeMapsWork/NOAA-USFWS-RangeMaps/"
+  filepath <- "C:/Users/melinata/Documents/NOAA-USFWS-RangeMaps/"
   write.csv(noaa_extracted_matches, paste0(filepath, "Output/extracted_NOAA_matches.csv"))
   
