@@ -104,7 +104,7 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   }
   
   MGL_B <- bind_rows(MGL1_A, MGL2_A)
-  MGL_B <- drop_na(MGL_B)
+    MGL_B <- drop_na(MGL_B) #remove blank rows, if there are any
 
 #MAKE GROUP OF SEPERATES ----
   MGL_B_mult <- MGL_B  %>%
@@ -197,6 +197,10 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   }
 
 #checking existing files and exporting necessary ones
+  
+  #create empty df for tracking species that we add to our database
+  extracted_list <- c()
+  
   for(i in 1:nrow(MGL_D)){
     
     #pull list item out so that it can be saved individually
@@ -220,15 +224,17 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
     shapefile_location <- paste0(done_files,"/", name, ".shp")
     
     #export shapefile to file path
-    st_write(species_pull, shapefile_location, append=FALSE)
+    sf::st_write(species_pull, shapefile_location, append=FALSE)
     
+    #adding this species to the list that we will save locally
+    extracted_list[length(extracted_list)+1] <- c(species_pull$COMNAME)
+    extracted_list[length(extracted_list)+1] <- c(species_pull$SCINAME)
   }
 
 
 # CSV creation for DATASETS BASED ON SOURCES ----
-usfws_extracted_matches <- MGL_D %>% 
-  select(c(COMNAME, SCINAME, speciesID)) %>% 
-  st_drop_geometry() #remove spatial component to keep file size small
+  usfws_extracted_matches <- as.data.frame(matrix(extracted_list, ncol = 2, byrow = TRUE))
+  colnames(usfws_extracted_matches) <- c("Latin.Name", "Common.Name")
 
 ##write to Output folder ----
 filepath <- "C:/Users/melinata/Documents/NOAA-USFWS-RangeMaps/"
