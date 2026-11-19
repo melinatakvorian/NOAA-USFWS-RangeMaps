@@ -246,7 +246,7 @@ check_alternate_names <- function(df, name_col) {
     
     
     ##populate table for SHORT name matches----
-    shortname <- as.data.frame(matrix(nrow=nrow(cemml_raw),ncol=2))
+    shortname <- as.data.frame(matrix(nrow=1,ncol=2))
     shortname <- shortname %>% dplyr::rename(
       "USFWS" = V1, 
       "NOAA" = V2
@@ -286,7 +286,7 @@ check_alternate_names <- function(df, name_col) {
     realmatchSHORTusfws2 <- realmatchSHORTusfws2[!is.na(realmatchSHORTusfws2)] 
     
     #fill in USFWS column
-    rownum <- as.numeric(length(realmatchSHORTusfws2))
+    rownum <- as.numeric(length(realmatchSHORTusfws))
     
     for(i in 1:length(realmatchSHORTusfws2)){
       val <- realmatchSHORTusfws2[[i]]
