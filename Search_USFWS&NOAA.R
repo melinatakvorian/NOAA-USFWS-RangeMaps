@@ -56,7 +56,7 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   cemml_raw <- cemml_raw %>% select(Species.Common.Name,Species.Latin.Name,Species.ID)
   
   # remove NA rows
-    # cemml_raw <- cemml_raw[!is.na(cemml_raw$Species.Common.Name)]
+  cemml_raw <- na.omit(cemml_raw)
 
 #INITIALIZE check_alt_names FUNCTION ----
 #this function takes scientific names that have alternates, like "Phoebastria (=Diomedea) albatrus"
@@ -105,23 +105,23 @@ check_alternate_names <- function(df, name_col) {
   #Matches the full name to the full name 
   #i.e. matches 'Genus species subspecies' to 'Genus species subspecies'
   
-  ##CEMML & NOAA ----
-  
-  #run check_alternate_names function for NOAA
-  noaa_raw_expanded <- check_alternate_names(noaa_raw, "Scientific_Name")
-  
-  #run match
-  match_cemml_noaa <- match(cemml_raw$Species.Latin.Name, noaa_raw_expanded$Scientific_Name)
-  
-  #create list of matched names - NOAA
-  realmatchnoaa <- list()
-  
-  for(i in 1:length(match_cemml_noaa)){
-    val <- match_cemml_noaa[i]
-    realmatchnoaa[i] <- noaa_raw_expanded$Scientific_Name[val]
-  }
-  
-  realmatchnoaa <- realmatchnoaa[!is.na(realmatchnoaa)]  
+    ##CEMML & NOAA ----
+    
+    #run check_alternate_names function for NOAA
+    noaa_raw_expanded <- check_alternate_names(noaa_raw, "Scientific_Name")
+    
+    #run match
+    match_cemml_noaa <- match(cemml_raw$Species.Latin.Name, noaa_raw_expanded$Scientific_Name)
+    
+    #create list of matched names - NOAA
+    realmatchnoaa <- list()
+    
+    for(i in 1:length(match_cemml_noaa)){
+      val <- match_cemml_noaa[i]
+      realmatchnoaa[i] <- noaa_raw_expanded$Scientific_Name[val]
+    }
+    
+    realmatchnoaa <- realmatchnoaa[!is.na(realmatchnoaa)]  
 
 
     ##CEMML & USFWS 1/2 ----
@@ -170,8 +170,8 @@ check_alternate_names <- function(df, name_col) {
     #create list of matched names - USFWS
     realmatchUSFWS2 <- list()
     
-    for(i in 1:length(match_cemml_usfws)){
-      val <- match_cemml_usfws[i]
+    for(i in 1:length(match_cemml_usfws2)){
+      val <- match_cemml_usfws2[i]
       realmatchUSFWS2[i] <- usfws2_raw_expanded$SCINAME[val]
     }
     
@@ -180,7 +180,7 @@ check_alternate_names <- function(df, name_col) {
     #table creation
     
     #fill in USFWS column
-    rownum <- as.numeric(length(realmatchUSFWS))
+    rownum <- as.numeric(length(realmatchUSFWS2))
     
     for(i in 1:length(realmatchUSFWS2)){
       val <- realmatchUSFWS2[[i]]
@@ -284,7 +284,7 @@ check_alternate_names <- function(df, name_col) {
     realmatchSHORTusfws2 <- realmatchSHORTusfws2[!is.na(realmatchSHORTusfws2)] 
     
     #fill in USFWS column
-    rownum <- as.numeric(length(realmatchSHORTusfws))
+    rownum <- as.numeric(length(realmatchSHORTusfws2))
     
     for(i in 1:length(realmatchSHORTusfws2)){
       val <- realmatchSHORTusfws2[[i]]
