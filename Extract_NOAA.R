@@ -7,7 +7,7 @@
 
 #Setup ----
 
-  setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/NOAA-USFWS-RangeMaps")
+  setwd("")
   
   ##install packages----
   # Package names
@@ -23,17 +23,17 @@
   invisible(lapply(packages, library, character.only = TRUE))
   
   ##installing and loading ArcGIS-R bridge (if not already on computer)----
-  #install.packages("arcgis", repos = c("https://r-arcgis.r-universe.dev", "https://cloud.r-project.org"))
+  install.packages("arcgis", repos = c("https://r-arcgis.r-universe.dev", "https://cloud.r-project.org"))
   library(arcgis)
   
-  #install.packages("arcgisbinding", repos = "https://r.esri.com", type = "win.binary")
+  install.packages("arcgisbinding", repos = "https://r.esri.com", type = "win.binary")
   library(arcgisbinding)
 
 #Data import ----
     ##CEMML list of species ----
-    matches_complete <- read.csv("Output/NOAA_matches.csv")
-    matches_usfws <- read.csv("Output/USFWS_matches.csv")
-    cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_Excel Files For Viewer/Species Assessments - Viewer.xlsx")
+    matches_complete <- read.csv("C:/Users/melinata/Documents/NOAA-USFWS-RangeMaps/Output/initial_NOAA_matches.csv")
+    matches_usfws <- read.csv("C:/Users/melinata/Documents/NOAA-USFWS-RangeMaps/Output/initial_USFWS_matches.csv")
+    cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/Species Assessments - Viewer.xlsx")
 
     ##Pulling NOAA data from ArcGIs Online ----
     # (not being used) noaa_dataset1 <- arc_read("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Species_Ranges/FeatureServer/1")

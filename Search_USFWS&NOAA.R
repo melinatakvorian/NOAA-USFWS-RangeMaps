@@ -21,7 +21,7 @@
 
 #SETUP----
 ##set working directory to pull the files----
-setwd("C:/Users/melinata/Documents/RangeMapsWork/NOAA-USFWS-RangeMaps")
+setwd("")
 
 ##install packages----
 # Package names

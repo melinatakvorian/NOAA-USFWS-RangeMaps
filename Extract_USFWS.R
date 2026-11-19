@@ -8,7 +8,7 @@
 
 
 #Setup ----
-setwd("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_RangeMaps/NOAA-USFWS-RangeMaps")
+setwd("")
 
 ##install packages----
 # Package names
@@ -215,7 +215,7 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
 
 # CSV creation for DATASETS BASED ON SOURCES ----
 usfws_extracted_matches <- MGL_D %>% 
-  select(COMNAME, SCINAME, speciesID) %>% 
+  select(c(COMNAME, SCINAME, speciesID)) %>% 
   st_drop_geometry() #remove spatial component to keep file size small
 
 ##write to Output folder ----
