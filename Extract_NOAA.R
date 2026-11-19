@@ -109,7 +109,7 @@
     print("NOAA DOES NOT HAVE GEOMETRY FOR THE RANGE MAPS YOU NEED. :( SORRY. YOU CAN EXIT THIS SCRIPT NOW")
   }
   
-#if they are all missing geometry, STOP HERE. You will not be using
+#if they are all missing geometry, STOP HERE!!!!!!
 
 #Make seperate table of species with multiple polygons ----
   noaa_A_mult <- noaa_A  %>%
