@@ -23,11 +23,11 @@
   invisible(lapply(packages, library, character.only = TRUE))
   
   ##installing and loading ArcGIS-R bridge (if not already on computer)----
-  install.packages("arcgis", repos = c("https://r-arcgis.r-universe.dev", "https://cloud.r-project.org"))
-  library(arcgis)
-  
-  install.packages("arcgisbinding", repos = "https://r.esri.com", type = "win.binary")
-  library(arcgisbinding)
+    #install.packages("arcgis", repos = c("https://r-arcgis.r-universe.dev", "https://cloud.r-project.org"))
+    library(arcgis)
+    
+    #install.packages("arcgisbinding", repos = "https://r.esri.com", type = "win.binary")
+    library(arcgisbinding)
 
 #Data import ----
     ##CEMML list of species ----
@@ -54,22 +54,30 @@
     #requires a /ID at the end, which is either 1,3,4 but none of them are successfully converted to
 
 #Matches ----
-  #delete the values that are ONLY in NOAA
+  #keep the values that are ONLY in NOAA
   usfws_list <- matches_usfws$Species.Latin.Name
   noaa_list <- matches_complete$Species.Latin.Name
   
-  unique_matches <- noaa_list[!noaa_list %in% usfws_list]
+  unique_matches <- matches_complete %>% filter(!matches_complete$Species.Latin.Name %in% matches_usfws$Species.Latin.Name)
   
-  noaa_A <- noaa_dataset4[0,] #change to 3
+  noaa_A <- noaa_dataset3[0,] #change to 3
   
   num <- 0
   
-  for(i in 1:nrow(noaa_dataset4)){ #change to 3
+  #identify range maps we already have
+  completed_range_maps <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/_RangeMaps/T&E Range Map Data.xlsx")
+  completed_range_maps <- completed_range_maps %>% select(c('Species Common Name', 'Species Latin Name', 'Species ID'))
+  
+  #create list of matched names based on full scientific name
+  #THIS LOGIC MAY NEED IMPROVEMENT
+  needed_range_maps <- unique_matches %>% filter(!unique_matches$Species.Latin.Name %in% completed_range_maps$`Species Latin Name`)
+  
+  for(i in 1:nrow(noaa_dataset3)){ #change to 3
     
-    newdf <- noaa_dataset4[i,] #change to 3
+    newdf <- noaa_dataset3[i,] #change to 3
     sci_name <- newdf$Scientific_Name
     
-    if(!sci_name %in% unique_matches) next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
+    if(!sci_name %in% needed_range_maps) next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
     num <- num+1
     
     com_name <- newdf$Common_Name
@@ -80,7 +88,7 @@
     
     print(paste(com_name, "speciesID: ",speciesID, " | has been added"))
     
-    noaa_A[num, ] <- noaa_dataset4[i,] #change to 3
+    noaa_A[num, ] <- noaa_dataset3[i,] #change to 3
   }
 
 

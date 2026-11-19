@@ -8,49 +8,36 @@
 
 
 #Setup ----
-setwd("")
-
-##install packages----
-# Package names
-packages <- c("readxl","tidyverse","tidyr","dplyr","stringr","sf","terra","tmap","leaflet")
-
-# Install packages not yet installed
-installed_packages <- packages %in% rownames(installed.packages())
-if (any(installed_packages == FALSE)) {
-  install.packages(packages[!installed_packages])
-}
-
-# Packages loading
-invisible(lapply(packages, library, character.only = TRUE))
-
-#Read in files ----
-usfws_1 <- sf::st_read("Rawdata/usfws_complete_species_current_range_1.shp")
-usfws_2 <- sf::st_read("Rawdata/usfws_complete_species_current_range_2.shp")
-matches_complete <- read_csv("C:/Users/melinata/Documents/NOAA-USFWS-RangeMaps/Output/initial_USFWS_matches.csv")
-cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/Species Assessments - Viewer.xlsx")
+  setwd("")
+  
+  ##install packages----
+  # Package names
+  packages <- c("readxl","tidyverse","tidyr","dplyr","stringr","sf","terra","tmap","leaflet")
+  
+  # Install packages not yet installed
+  installed_packages <- packages %in% rownames(installed.packages())
+  if (any(installed_packages == FALSE)) {
+    install.packages(packages[!installed_packages])
+  }
+  
+  # Packages loading
+  invisible(lapply(packages, library, character.only = TRUE))
+  
+  #Read in files ----
+  usfws_1 <- sf::st_read("Rawdata/usfws_complete_species_current_range_1.shp")
+  usfws_2 <- sf::st_read("Rawdata/usfws_complete_species_current_range_2.shp")
+  matches_complete <- read_csv("C:/Users/melinata/Documents/NOAA-USFWS-RangeMaps/Output/initial_USFWS_matches.csv")
+  cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/Species Assessments - Viewer.xlsx")
 
 
 #PULL INDIVIDUAL SPECIES Data ----
 ## identify species we don't already have maps for ----
   completed_range_maps <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/_RangeMaps/T&E Range Map Data.xlsx")
   completed_range_maps <- completed_range_maps %>% select(c('Species Common Name', 'Species Latin Name', 'Species ID'))
-
-  #run match
-    match_completed <- match(completed_range_maps$`Species Latin Name`, matches_complete$Species.Latin.Name)
-  
+    
   #create list of matched names based on full scientific name
     #THIS LOGIC MAY NEED IMPROVEMENT
-    needed_matches <- character(length(match_completed))
-    
-    for(i in 1:length(match_completed)){
-      val <- match_completed[i]
-      needed_matches[i] <- matches_complete$Species.Latin.Name[val]
-    }
-    
-    needed_matches <- needed_matches[!is.na(needed_matches)]
-  
-  #select only the NEEDED rows from the matches_complete dataset
-    needed_range_maps <- matches_complete %>% filter(!matches_complete$Species.Latin.Name %in% needed_matches)
+    needed_range_maps <- matches_complete %>% filter(!matches_complete$Species.Latin.Name %in% completed_range_maps$`Species Latin Name`)
   
 ##usfws 1 ----
   #create a data frame to store the shapefiles we need
@@ -237,8 +224,9 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   colnames(usfws_extracted_matches) <- c("Latin.Name", "Common.Name")
 
 ##write to Output folder ----
+current_date <- format(Sys.Date(), "%Y%m%d")  # e.g., "20250924"
 filepath <- "C:/Users/melinata/Documents/NOAA-USFWS-RangeMaps/"
-write.csv(usfws_extracted_matches, paste0(filepath, "Output/extracted_USFWS_matches.csv"))
+write.csv(usfws_extracted_matches, paste0(filepath, "Output/extracted_USFWS_matches", current_date, ".csv"))
 
 
 #example of plotting a shapefile ----
