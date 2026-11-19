@@ -58,6 +58,10 @@ cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/W
   # remove NA rows
   cemml_raw <- na.omit(cemml_raw)
 
+  # change any species names as necessary, to create identical matches
+  cemml_raw$Species.Latin.Name[123] <- "Odobenus rosmarus ssp. divergens"
+  
+  
 #INITIALIZE check_alt_names FUNCTION ----
 #this function takes scientific names that have alternates, like "Phoebastria (=Diomedea) albatrus"
 #and edits the existing cell to "Phoebastria albatrus" AND 
@@ -142,7 +146,7 @@ check_alternate_names <- function(df, name_col) {
     realmatchUSFWS <- realmatchUSFWS[!is.na(realmatchUSFWS)]
 
     ##populate table for LONG name matches ----
-    longname <- as.data.frame(matrix(nrow=nrow(cemml_raw),ncol=2))
+    longname <- as.data.frame(matrix(nrow=1,ncol=2))
     longname <- longname %>% dplyr::rename(
       "USFWS" = V1, 
       "NOAA" = V2
@@ -180,7 +184,7 @@ check_alternate_names <- function(df, name_col) {
     #table creation
     
     #fill in USFWS column
-    rownum <- as.numeric(length(realmatchUSFWS2))
+    rownum <- as.numeric(length(realmatchUSFWS))
     
     for(i in 1:length(realmatchUSFWS2)){
       val <- realmatchUSFWS2[[i]]
@@ -190,8 +194,6 @@ check_alternate_names <- function(df, name_col) {
 
     ##CSV creation for LONG names ----
     finaldata_longname <- longname
-      #remove NAs from NOAA, which should be the column with the most data (so you aren't cutting off USFWS)
-      finaldata_longname <- drop_na(finaldata_longname, NOAA)
     
     write.csv(finaldata_longname, "Output/MATCHES_full_scinames.csv") #make clear this is the complete dataset
     
