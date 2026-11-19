@@ -7,7 +7,7 @@
 
 #Setup ----
 
-  setwd("")
+  #setwd("")
   
   ##install packages----
   # Package names
@@ -23,11 +23,11 @@
   invisible(lapply(packages, library, character.only = TRUE))
   
   ##installing and loading ArcGIS-R bridge (if not already on computer)----
-  install.packages("arcgis", repos = c("https://r-arcgis.r-universe.dev", "https://cloud.r-project.org"))
-  library(arcgis)
-  
-  install.packages("arcgisbinding", repos = "https://r.esri.com", type = "win.binary")
-  library(arcgisbinding)
+    #install.packages("arcgis", repos = c("https://r-arcgis.r-universe.dev", "https://cloud.r-project.org"))
+    library(arcgis)
+    
+    #install.packages("arcgisbinding", repos = "https://r.esri.com", type = "win.binary")
+    library(arcgisbinding)
 
 #Data import ----
     ##CEMML list of species ----
@@ -54,22 +54,33 @@
     #requires a /ID at the end, which is either 1,3,4 but none of them are successfully converted to
 
 #Matches ----
-  #delete the values that are ONLY in NOAA
+  #keep the values that are ONLY in NOAA
   usfws_list <- matches_usfws$Species.Latin.Name
   noaa_list <- matches_complete$Species.Latin.Name
   
-  unique_matches <- noaa_list[!noaa_list %in% usfws_list]
+  unique_matches <- matches_complete %>% filter(!matches_complete$Species.Latin.Name %in% matches_usfws$Species.Latin.Name)
   
-  noaa_A <- noaa_dataset4[0,] #change to 3
+  noaa_A <- noaa_dataset3[0,] #change to 3
   
   num <- 0
   
-  for(i in 1:nrow(noaa_dataset4)){ #change to 3
+  #identify range maps we already have
+  completed_range_maps <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/_RangeMaps/T&E Range Map Data.xlsx")
+  completed_range_maps <- completed_range_maps %>% select(c('Species Common Name', 'Species Latin Name', 'Species ID'))
+  
+  #create list of matched names based on full scientific name
+  #THIS LOGIC MAY NEED IMPROVEMENT
+  needed_range_maps <- unique_matches %>% filter(!unique_matches$Species.Latin.Name %in% completed_range_maps$`Species Latin Name`)
+  
+  count <- 0
+  missing_geom_list <- c()
+  
+  for(i in 1:nrow(noaa_dataset3)){ #change to 3
     
-    newdf <- noaa_dataset4[i,] #change to 3
+    newdf <- noaa_dataset3[i,] #change to 3
     sci_name <- newdf$Scientific_Name
     
-    if(!sci_name %in% unique_matches) next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
+    if(!sci_name %in% needed_range_maps$Species.Latin.Name) next  #[SKIP IF NAME IS NOT IN THE MATCHES DATASET]
     num <- num+1
     
     com_name <- newdf$Common_Name
@@ -78,11 +89,27 @@
     speciesID <- which(cemml_raw$`Species Latin Name` == sci_name)
     speciesID <- as.numeric(speciesID)
     
-    print(paste(com_name, "speciesID: ",speciesID, " | has been added"))
+    print(paste("COMMON NAME: ", com_name, " | ID: ", speciesID, " | has been added"))
     
-    noaa_A[num, ] <- noaa_dataset4[i,] #change to 3
-  }
+    noaa_A[num, ] <- noaa_dataset3[i,] #change to 3
+    
+    #need to only join the ones that are not empty
 
+    if(sf::st_is_empty(noaa_A$geometry[i])){
+      count <- count + 1
+      
+      missing_geom_list[length(missing_geom_list)+1] <- speciesID
+      
+      print(paste("COMMON NAME: ", com_name, " | ID: ", speciesID, " | IS MISSING GEOMETRY. THIS IS FILE: ", count, " of ", length(needed_range_maps)))
+    }
+
+  }
+  
+  if(all(sort(missing_geom_list) == sort(needed_range_maps$Species.ID))){
+    print("NOAA DOES NOT HAVE GEOMETRY FOR THE RANGE MAPS YOU NEED. :( SORRY. YOU CAN EXIT THIS SCRIPT NOW")
+  }
+  
+#if they are all missing geometry, STOP HERE!!!!!!
 
 #Make seperate table of species with multiple polygons ----
   noaa_A_mult <- noaa_A  %>%
@@ -107,7 +134,11 @@
   for (species in species_list) {
     
     #need to only join the ones that are not empty
-    if(st_is_empty(noaa_A_mult$geometry[species])) next
+    if(sf::st_is_empty(noaa_A_mult$geometry[species])){
+      print(paste0(species, " is missing geometry. Skipping this file."))
+    }
+    
+    if(sf::st_is_empty(noaa_A_mult$geometry[species])) next
     
     # Get all rows for this species
     species_rows <- noaa_A_mult[noaa_A_mult$Scientific_Name == species, ]
@@ -263,6 +294,6 @@
     st_drop_geometry()
   
   ##write to Output folder ----
-  filepath <- "C:/Users/melinata/Documents/RangeMapsWork/NOAA-USFWS-RangeMaps/"
+  filepath <- "C:/Users/melinata/Documents/NOAA-USFWS-RangeMaps/"
   write.csv(noaa_extracted_matches, paste0(filepath, "Output/extracted_NOAA_matches.csv"))
   
