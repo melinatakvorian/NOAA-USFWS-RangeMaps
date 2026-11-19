@@ -7,7 +7,7 @@
 
 #Setup ----
 
-  setwd("")
+  #setwd("")
   
   ##install packages----
   # Package names
@@ -72,12 +72,15 @@
   #THIS LOGIC MAY NEED IMPROVEMENT
   needed_range_maps <- unique_matches %>% filter(!unique_matches$Species.Latin.Name %in% completed_range_maps$`Species Latin Name`)
   
+  count <- 0
+  missing_geom_list <- c()
+  
   for(i in 1:nrow(noaa_dataset3)){ #change to 3
     
     newdf <- noaa_dataset3[i,] #change to 3
     sci_name <- newdf$Scientific_Name
     
-    if(!sci_name %in% needed_range_maps) next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
+    if(!sci_name %in% needed_range_maps$Species.Latin.Name) next  #[SKIP IF NAME IS NOT IN THE MATCHES DATASET]
     num <- num+1
     
     com_name <- newdf$Common_Name
@@ -86,11 +89,27 @@
     speciesID <- which(cemml_raw$`Species Latin Name` == sci_name)
     speciesID <- as.numeric(speciesID)
     
-    print(paste(com_name, "speciesID: ",speciesID, " | has been added"))
+    print(paste("COMMON NAME: ", com_name, " | ID: ", speciesID, " | has been added"))
     
     noaa_A[num, ] <- noaa_dataset3[i,] #change to 3
-  }
+    
+    #need to only join the ones that are not empty
 
+    if(sf::st_is_empty(noaa_A$geometry[i])){
+      count <- count + 1
+      
+      missing_geom_list[length(missing_geom_list)+1] <- speciesID
+      
+      print(paste("COMMON NAME: ", com_name, " | ID: ", speciesID, " | IS MISSING GEOMETRY. THIS IS FILE: ", count, " of ", length(needed_range_maps)))
+    }
+
+  }
+  
+  if(all(sort(missing_geom_list) == sort(needed_range_maps$Species.ID))){
+    print("NOAA DOES NOT HAVE GEOMETRY FOR THE RANGE MAPS YOU NEED. :( SORRY. YOU CAN EXIT THIS SCRIPT NOW")
+  }
+  
+#if they are all missing geometry, STOP HERE. You will not be using
 
 #Make seperate table of species with multiple polygons ----
   noaa_A_mult <- noaa_A  %>%
@@ -115,7 +134,11 @@
   for (species in species_list) {
     
     #need to only join the ones that are not empty
-    if(st_is_empty(noaa_A_mult$geometry[species])) next
+    if(sf::st_is_empty(noaa_A_mult$geometry[species])){
+      print(paste0(species, " is missing geometry. Skipping this file."))
+    }
+    
+    if(sf::st_is_empty(noaa_A_mult$geometry[species])) next
     
     # Get all rows for this species
     species_rows <- noaa_A_mult[noaa_A_mult$Scientific_Name == species, ]
