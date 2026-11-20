@@ -139,6 +139,7 @@
   
   ##CHECK FOR GEOMETRY, IF THE POLYGONS ARE EMPTY, THEN DELETE FROM TABLE----
   MGL_D <- subset(MGL_D, !(sf::st_is_empty(geometry)))
+  
 
   #add CRS`
   st_crs(MGL_D) <- st_crs(usfws_1)
