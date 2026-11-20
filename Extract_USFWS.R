@@ -8,7 +8,7 @@
 
 
 #Setup ----
-  setwd("")
+  #setwd("")
   
   ##install packages----
   # Package names
@@ -25,7 +25,11 @@
   
   #Read in files ----
   usfws_1 <- sf::st_read("Rawdata/usfws_complete_species_current_range_1.shp")
+    #create version of this without spatial data so that it can be searched & viewed quickly
+    no_geom_usfws_1 <- sf::st_drop_geometry(usfws_1)
   usfws_2 <- sf::st_read("Rawdata/usfws_complete_species_current_range_2.shp")
+    #create version of this without spatial data so that it can be searched & viewed quickly
+    no_geom_usfws_2 <- sf::st_drop_geometry(usfws_2)
   matches_complete <- read_csv("C:/Users/melinata/Documents/NOAA-USFWS-RangeMaps/Output/initial_USFWS_matches.csv")
   cemml_raw <- read_xlsx("N:/RStor/CEMML/ClimateChange/0_Natural Resources Teams/Wildlife/_TEVAs/Species Assessments - Viewer.xlsx")
 
@@ -46,6 +50,10 @@
   MGL1_A <- as.data.frame(MGL1_A)
   
   num <- 0
+  
+  #TEMPORARY ADDITION TO GET THE HAWAIIAN GOOSE
+  usfws_1$SCINAME[58] <- 	"Branta sandvicensis"
+  
   for(i in 1:nrow(usfws_1)){
     
     newdf <- usfws_1[i,]
