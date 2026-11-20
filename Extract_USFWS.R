@@ -43,6 +43,8 @@
     #THIS LOGIC MAY NEED IMPROVEMENT
     needed_range_maps <- matches_complete %>% filter(!matches_complete$Species.Latin.Name %in% completed_range_maps$`Species Latin Name`)
   
+    usfws_1_needed <- no_geom_usfws_1 %>% filter(no_geom_usfws_1$SCINAME %in% matches_complete$Species.Latin.Name)
+    
 ##usfws 1 ----
   #create a data frame to store the shapefiles we need
   MGL1_A <- matrix(nrow = 1, ncol = 11)
@@ -51,15 +53,22 @@
   
   num <- 0
   
-  #TEMPORARY ADDITION TO GET THE HAWAIIAN GOOSE
-  usfws_1$SCINAME[58] <- 	"Branta sandvicensis"
+
   
   for(i in 1:nrow(usfws_1)){
     
     newdf <- usfws_1[i,]
     sci_name <- newdf$SCINAME
     
-    if((!sci_name %in% needed_range_maps$Species.Latin.Name) && (!sci_name %in% needed_range_maps$short_name)) next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
+    if((!sci_name %in% needed_range_maps$Species.Latin.Name) && (!sci_name %in% needed_range_maps$short_name)){
+      if(tolower(newdf$COMNAME) %in% tolower(needed_range_maps$Species.Common.Name)){
+        cat("NOTICE:\n",
+            "  Species: ", newdf$COMNAME, "\n",
+            "  Issue: scientific name in usfws_1 does not match anything in the needed_range_maps dataframe.\n", sep = "",
+            "  Solution: Change the name in usfws_1$SCINAME[", i, "] and re-run this code.\n")
+        }
+      next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
+    } 
     num <- num+1
     
     com_name <- newdf$COMNAME
@@ -72,7 +81,15 @@
     
     MGL1_A[num, ] <- usfws_1[i,]
   }
-
+  
+  ##EXAMPLE TO RESOLVE ISSUE WITH NAMES IN USFWS_1 SCRIPT: 
+    #1. Look at the needed_range_maps dataframe and copy the scientific name you need. 
+  
+    #2. Change the name of the species in the usfws_1 dataframe to match this
+      #usfws_1$SCINAME[58] <- 	"Branta sandvicensis" #the '58' came from the warning message
+    
+    #3. Re-run the code chunk above and verify that your desired species was
+  
 ##usfws 2 ----
   MGL2_A <- matrix(nrow = 1, ncol = 11)
   colnames(MGL2_A) <-  colnames(usfws_2)
@@ -84,7 +101,16 @@
     newdf <- usfws_2[i,]
     sci_name <- newdf$SCINAME
     
-    if((!sci_name %in% needed_range_maps$Species.Latin.Name) && (!sci_name %in% needed_range_maps$short_name)) next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
+    if((!sci_name %in% needed_range_maps$Species.Latin.Name) && (!sci_name %in% needed_range_maps$short_name)){
+      if(tolower(newdf$COMNAME) %in% tolower(needed_range_maps$Species.Common.Name)){
+        cat("NOTICE:\n",
+            "  Species: ", newdf$COMNAME, "\n",
+            "  Issue: scientific name in usfws_1 does not match anything in the needed_range_maps dataframe.\n", sep = "",
+            "  Solution: Change the name in usfws_1$SCINAME[", i, "] and re-run this code.\n")
+      }
+      next  #[CHECK IF NAME IS NOT IN THE MATCHES DATASET]
+    } 
+    
     num <- num+1
     
     com_name <- newdf$COMNAME
@@ -97,6 +123,15 @@
     
     MGL2_A[num, ] <- usfws_2[i,]
   }
+  
+  ##EXAMPLE TO RESOLVE ISSUE WITH NAMES IN USFWS_2: 
+  #1. Look at the needed_range_maps dataframe and copy the scientific name you need. 
+  
+  #2. Change the name of the species in the usfws_2 dataframe to match this
+    #usfws_2$SCINAME[58] <- 	"Branta sandvicensis" #the '58' came from the warning message
+  
+  #3. Re-run the code chunk above and verify that your desired species was
+  
   
   MGL_B <- bind_rows(MGL1_A, MGL2_A)
     MGL_B <- drop_na(MGL_B) #remove blank rows, if there are any
